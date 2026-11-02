@@ -1,4 +1,4 @@
-# Daily Language Game — base language entries. One per line: Name<TAB>tier
+# Daily Language Game, base language entries. One per line: Name<TAB>tier
 # Accent varieties are NOT listed here; they reuse their base language's
 # Glottocode with a variety suffix (see tech-stack.md entry record).
 # Esperanto deliberately absent: no geographic footprint, unscoreable.

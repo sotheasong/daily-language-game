@@ -13,6 +13,14 @@ Usage:
     python3 -m pipeline.glottocodes data/entries.tsv -o data/resolved.tsv
     python3 -m pipeline.glottocodes data/entries.tsv -o data/resolved.tsv --refresh
 
+Resolution is pinned by an approval lock. Once an entry is checked, its Glottocode
+is the join key under every clip, polygon and approved puzzle, so an upstream
+re-code is reported as drift rather than adopted:
+
+    python3 -m pipeline.glottocodes data/entries.tsv -o data/resolved.tsv \
+        --lock data/glottocodes.lock.tsv
+    # after reviewing the change, sign it off with --write-lock
+
 Input is one entry per line: "Name" or "Name<TAB>tier". Blank lines and lines
 starting with # are ignored.
 
@@ -24,13 +32,13 @@ import csv
 import difflib
 import os
 import sys
-import urllib.request
+
+from pipeline import sources
 
 CLDF_URL = (
     "https://raw.githubusercontent.com/glottolog/glottolog-cldf/master/cldf/languages.csv"
 )
-_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEFAULT_CACHE = os.path.join(_REPO_ROOT, ".cache", "languages.csv")
+DEFAULT_CACHE = os.path.join(sources.CACHE_DIR, "languages.csv")
 
 # Names where Glottolog's label differs from the one a player would recognise.
 # Keep this list short and obvious; a long alias table means the entry list is wrong.
@@ -80,7 +88,9 @@ ALIASES = {
 
 # Any status other than "ok" means a human has to look. Keep this list and the
 # statuses returned by resolve() in step, or the exit-code gate goes quiet.
-STATUSES = ("ok", "ambiguous", "alias_broken", "unresolved")
+STATUSES = ("ok", "ambiguous", "alias_broken", "unresolved", "drifted")
+
+LOCK_FIELDS = ["input_name", "glottocode", "matched_name"]
 
 OUT_FIELDS = [
     "input_name",
@@ -102,20 +112,11 @@ OUT_FIELDS = [
 
 def fetch_table(cache_path, refresh=False):
     """Download the CLDF language table once and cache it on disk."""
-    if refresh or not os.path.exists(cache_path):
-        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-        sys.stderr.write("downloading Glottolog CLDF table...\n")
-        with urllib.request.urlopen(CLDF_URL, timeout=120) as resp:
-            data = resp.read()
-        if len(data) < 500_000:
-            raise SystemExit(
-                f"refusing to cache a suspiciously small table ({len(data)} bytes); "
-                "check the URL or your connection"
-            )
-        with open(cache_path, "wb") as fh:
-            fh.write(data)
-    with open(cache_path, newline="", encoding="utf-8") as fh:
-        return list(csv.DictReader(fh))
+    sources.fetch(
+        CLDF_URL, cache_path, min_bytes=500_000, refresh=refresh,
+        label="Glottolog CLDF language table",
+    )
+    return sources.load_csv(cache_path)
 
 
 def build_index(rows, levels):
@@ -140,6 +141,28 @@ def read_entries(path):
             tier = parts[1].strip() if len(parts) > 1 else ""
             entries.append((name, tier))
     return entries
+
+
+def read_lock(path):
+    """Read the approval lock as input_name -> {glottocode, matched_name}."""
+    lock = {}
+    with open(path, newline="", encoding="utf-8") as fh:
+        for row in csv.DictReader(fh, delimiter="\t"):
+            lock[row["input_name"]] = row
+    return lock
+
+
+def write_lock(path, records):
+    """Rewrite the lock from a run a human has just signed off on."""
+    approved = [r for r in records if r["glottocode"]]
+    with open(path, "w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(
+            fh, fieldnames=LOCK_FIELDS, delimiter="\t",
+            extrasaction="ignore", lineterminator="\n",
+        )
+        writer.writeheader()
+        writer.writerows(approved)
+    return len(approved)
 
 
 def resolve(name, index, names_list, cutoff, aliases=None):
@@ -183,6 +206,26 @@ def resolve(name, index, names_list, cutoff, aliases=None):
     return "unresolved", None, "; ".join(cands)
 
 
+def apply_lock(records, lock):
+    """Flag approved entries whose Glottocode has moved upstream.
+
+    The lock file is the human approval record for this step. Once an entry has
+    been checked, its Glottocode is the join key under every clip, polygon and
+    approved puzzle, so an upstream re-code is a breaking change and has to be
+    re-approved rather than silently adopted.
+    """
+    for rec in records:
+        locked = lock.get(rec["input_name"])
+        if locked and rec["glottocode"] != locked["glottocode"]:
+            rec["status"] = "drifted"
+            rec["candidates"] = (
+                f"approved as {locked['glottocode']} ({locked['matched_name']}), "
+                f"now resolves to {rec['glottocode'] or 'nothing'} "
+                f"({rec['matched_name'] or rec['status']})"
+            )
+    return records
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("entries", help="input file, one entry per line, optional tab-separated tier")
@@ -195,6 +238,12 @@ def main():
         help="comma-separated Glottolog levels to match against (language,dialect,family)",
     )
     ap.add_argument("--cutoff", type=float, default=0.75, help="fuzzy match cutoff, 0-1")
+    ap.add_argument("--lock", help="approved input_name/glottocode TSV; drift from it needs a human")
+    ap.add_argument(
+        "--write-lock",
+        action="store_true",
+        help="rewrite --lock from this run, recording a human sign-off",
+    )
     args = ap.parse_args()
 
     levels = {lvl.strip() for lvl in args.levels.split(",") if lvl.strip()}
@@ -204,10 +253,8 @@ def main():
     entries = read_entries(args.entries)
 
     out_rows = []
-    counts = dict.fromkeys(STATUSES, 0)
     for name, tier in entries:
         status, row, cands = resolve(name, index, names_list, args.cutoff)
-        counts[status] += 1
         rec = {f: "" for f in OUT_FIELDS}
         rec.update({"input_name": name, "tier": tier, "status": status, "candidates": cands})
         if row is not None:
@@ -226,6 +273,19 @@ def main():
                 }
             )
         out_rows.append(rec)
+
+    if args.write_lock:
+        if not args.lock:
+            raise SystemExit("--write-lock needs --lock PATH to write to")
+        n = write_lock(args.lock, out_rows)
+        sys.stderr.write(f"wrote {n} approved entries to {args.lock}\n")
+    elif args.lock and os.path.exists(args.lock):
+        apply_lock(out_rows, read_lock(args.lock))
+
+    # Counted after the lock check, so drift shows up in the summary and the gate.
+    counts = dict.fromkeys(STATUSES, 0)
+    for rec in out_rows:
+        counts[rec["status"]] += 1
 
     stream = sys.stdout if args.out == "-" else open(args.out, "w", newline="", encoding="utf-8")
     try:
