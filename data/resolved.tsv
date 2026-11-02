@@ -1,0 +1,121 @@
+input_name	tier	status	glottocode	matched_name	level	iso639_3	macroarea	latitude	longitude	countries	family_id	is_isolate	candidates
+French	1	ok	stan1290	French	language	fra	Eurasia	48.0	2.0	AD;BE;CA;CH;FR;GF;IT;LU;MC;PM;TF;US	indo1319	false	
+Spanish	1	ok	stan1288	Spanish	language	spa	Eurasia	40.4414	-1.11788	AD;AR;BO;BR;BZ;CL;CO;CR;CU;DO;EC;ES;FR;GI;GT;GY;HN;HT;MA;MX;NI;PA;PE;PR;PT;PY;SV;US;UY;VE	indo1319	false	
+Italian	1	ok	ital1282	Italian	language	ita	Eurasia	43.0464	12.6489	AT;CH;FR;HR;IT;SI;SM;VA	indo1319	false	
+German	1	ok	stan1295	German	language	deu	Eurasia	48.649	12.4676	AT;BE;CH;CZ;DE;DK;FR;HU;IT;LI;LU;NL;PL;RO;SI;SK	indo1319	false	
+Portuguese	1	ok	port1283	Portuguese	language	por	Eurasia	39.91	-8.1	AD;AR;BO;BR;CO;ES;FR;GF;GY;PE;PT;PY;SR;UY;VE	indo1319	false	
+Russian	1	ok	russ1263	Russian	language	rus	Eurasia	59.0	50.0	BY;CN;EE;FI;GE;KG;KP;KZ;LT;LV;MD;MN;NO;PL;RO;RU;SJ;TM;UA;UZ	indo1319	false	
+Mandarin	1	ok	mand1415	Mandarin Chinese	language	cmn	Eurasia	40.0209	116.228	CN;KP;LA;MM;MN;RU;TW;VN	sino1245	false	
+Cantonese	1	ok	yuec1235	Yue Chinese	language	yue	Eurasia	23.0	113.0	CN;VN	sino1245	false	
+Japanese	1	ok	nucl1643	Japanese	language	jpn	Eurasia	35.0	135.0	JP	japo1237	false	
+Korean	1	ok	kore1280	Korean	language	kor	Eurasia	37.54	126.98	CN;KP;KR;RU	kore1284	false	
+Arabic	1	ok	stan1318	Standard Arabic	language	arb	Eurasia	27.9625	43.8525	AE;BH;DJ;DZ;EG;ER;IL;IQ;JO;KM;KW;LB;LY;MA;OM;PS;QA;SA;SD;SO;SY;TD;TN;TZ;YE	afro1255	false	
+Hindi	1	ok	hind1269	Hindi	language	hin	Eurasia	25.0	77.0	BD;BT;IN;NP	indo1319	false	
+Dutch	1	ok	dutc1256	Dutch	language	nld	Eurasia	52.0	5.0	AW;BE;BQ;BR;CW;DE;GF;GY;NL;SR;SX	indo1319	false	
+Greek	1	ok	mode1248	Modern Greek	language	ell	Eurasia	38.36	23.13	AL;BG;CY;EG;GR;IT;MK;RO;TR;UA	indo1319	false	
+Hebrew	1	ok	hebr1245	Modern Hebrew	language	heb	Eurasia	31.1056	35.0179	IL;JO;LB;PS;SY	afro1255	false	
+Turkish	1	ok	nucl1301	Turkish	language	tur	Eurasia	39.8667	32.8667	AL;AM;AZ;BG;CY;GE;GR;IQ;IR;MK;SY;TR	turk1311	false	
+Polish	1	ok	poli1260	Polish	language	pol	Eurasia	51.8439	18.6255	BY;CZ;DE;LT;PL;RU;SK;UA	indo1319	false	
+Swedish	1	ok	swed1254	Swedish	language	swe	Eurasia	59.800634	17.389526	AX;DK;FI;NO;SE	indo1319	false	
+Vietnamese	1	ok	viet1252	Vietnamese	language	vie	Eurasia	20.681188	105.774071	CN;LA;VN	aust1305	false	
+Thai	1	ok	thai1261	Thai	language	tha	Eurasia	14.192	100.671	KH;MM;TH	taik1256	false	
+Swahili	1	ok	swah1253	Swahili	language	swh	Africa	-8.25605	37.624	BI;KE;MZ;RW;SO;TZ;UG	atla1278	false	
+English	1	ok	stan1293	English	language	eng	Africa;Eurasia;South America	53.0	-1.0	AU;BM;BR;BZ;CA;CC;CK;CU;CX;DO;FK;GB;GG;GI;GP;GS;GT;GY;HN;IE;IM;IO;JE;KY;LR;MX;NF;PN;SH;SR;UM;US;VE;ZA	indo1319	false	
+Ukrainian	2	ok	ukra1253	Ukrainian	language	ukr	Eurasia	49.796	29.945	BY;HU;MD;PL;RO;RU;SK;UA	indo1319	false	
+Czech	2	ok	czec1258	Czech	language	ces	Eurasia	49.873398	15.10437	AT;CZ;PL;SK	indo1319	false	
+Slovak	2	ok	slov1269	Slovak	language	slk	Eurasia	48.545705	18.78479	AT;CZ;HU;PL;RS;SK;UA	indo1319	false	
+Romanian	2	ok	roma1327	Romanian	language	ron	Eurasia	46.3913	24.2256	BG;HU;MD;RO;RS;UA	indo1319	false	
+Bulgarian	2	ok	bulg1262	Bulgarian	language	bul	Eurasia	43.3646	25.047	BG;GR;MD;MK;RO;RS;TR;UA	indo1319	false	
+Serbian	2	ok	serb1264	Serbian Standard	dialect	srp	Eurasia	44.3238	21.9192	AL;BA;BG;HR;HU;ME;MK;RO;RS	indo1319		
+Croatian	2	ok	croa1245	Croatian Standard	dialect	hrv	Eurasia	45.555	15.982	AT;BA;HR;HU;IT;ME;RS;SI	indo1319		
+Slovenian	2	ok	slov1268	Slovenian	language	slv	Eurasia	46.2543	14.7766	AT;HR;HU;IT;SI	indo1319	false	
+Macedonian	2	ok	mace1250	Macedonian	language	mkd	Eurasia	41.5957	21.7932	AL;BG;GR;MK;RS	indo1319	false	
+Belarusian	2	ok	bela1254	Belarusian	language	bel	Eurasia	53.2307	25.6038	BY;LT;LV;PL;RU;UA	indo1319	false	
+Lithuanian	2	ok	lith1251	Lithuanian	language	lit	Eurasia	55.1429	23.9601	BY;LT;LV;PL;RU	indo1319	false	
+Latvian	2	ok	latv1249	Latvian	language	lav	Eurasia	56.826108	24.309118	BY;EE;LT;LV;RU	indo1319	false	
+Estonian	2	ok	esto1258	Estonian	language	ekk	Eurasia	58.55	25.82	EE;LV;RU	ural1272	false	
+Finnish	2	ok	finn1318	Finnish	language	fin	Eurasia	64.7628	25.5577	EE;FI;NO;RU;SE	ural1272	false	
+Hungarian	2	ok	hung1274	Hungarian	language	hun	Eurasia	46.9068585714	19.6555271429	AT;HR;HU;RO;RS;SI;SK;UA	ural1272	false	
+Norwegian	2	ok	norw1258	Norwegian	language	nor	Eurasia	59.92	10.71	FI;NO;RU;SE;SJ	indo1319	false	
+Danish	2	ok	dani1285	Danish	language	dan	Eurasia	54.8655	9.36284	DE;DK;FO;GL	indo1319	false	
+Icelandic	2	ok	icel1247	Icelandic	language	isl	Eurasia	63.4837	-19.0212	IS	indo1319	false	
+Catalan	2	ok	stan1289	Catalan	language	cat	Eurasia	41.453	1.569	AD;ES;FR;IT	indo1319	false	
+Galician	2	ok	gali1258	Galician	language	glg	Eurasia	42.2446	-7.5343	ES;PT	indo1319	false	
+Basque	2	ok	basq1248	Basque	language	eus	Eurasia	43.2787	-1.31622	ES;FR		true	
+Welsh	2	ok	wels1247	Welsh	language	cym	Eurasia	52.0	-4.0	AR;GB	indo1319	false	
+Irish	2	ok	iris1253	Irish	language	gle	Eurasia	53.2186	-7.61509	GB;IE	indo1319	false	
+Scottish Gaelic	2	ok	scot1245	Scottish Gaelic	language	gla	Eurasia	56.7574	-5.24366	GB	indo1319	false	
+Albanian	2	ok	tosk1239	Northern Tosk Albanian	language	als	Eurasia	41.0	20.0	AL;GR;MK	indo1319	false	
+Maltese	2	ok	malt1254	Maltese	language	mlt	Eurasia	35.8884	14.4508	MT	afro1255	false	
+Yiddish	2	ok	east2295	Eastern Yiddish	language	ydd	Eurasia	51.75	19.42	AR;AU;BE;BY;CA;CR;EE;HU;IL;LT;LV;MD;PA;PL;PR;RO;RU;SE;UA;US;UY;ZA	indo1319	false	
+Afrikaans	2	ok	afri1274	Afrikaans	language	afr	Africa	-31.63272	20.46356	BW;MZ;NA;ZA;ZM;ZW	indo1319	false	
+Amharic	2	ok	amha1245	Amharic	language	amh	Africa	11.708182	39.543456	DJ;ET	afro1255	false	
+Somali	2	ok	soma1255	Somali	language	som	Africa	4.778704	45.152856	DJ;ET;KE;SO	afro1255	false	
+Yoruba	2	ok	yoru1245	Yoruba	language	yor	Africa	7.15345	3.67225	BJ;NG	atla1278	false	
+Igbo	2	ok	nucl1417	Igbo	language	ibo	Africa	4.62705	7.23441	NG	atla1278	false	
+Hausa	2	ok	haus1257	Hausa	language	hau	Africa	11.1513	8.7804	BF;BJ;CM;NE;NG;TD	afro1255	false	
+Zulu	2	ok	zulu1248	Zulu	language	zul	Africa	-28.9	30.2	BW;LS;MZ;SZ;ZA	atla1278	false	
+Persian	2	ok	west2369	Western Farsi	language	pes	Eurasia	32.9	53.3	AF;AZ;IQ;IR;TM;TR	indo1319	false	
+Pashto	2	ok	nort2646	Northern Pashto	language	pbu	Eurasia	34.0	71.33	AF;IN;PK	indo1319	false	
+Georgian	2	ok	nucl1302	Georgian	language	kat	Eurasia	41.850397	43.78613	AM;AZ;GE;IR;RU;TR	kart1248	false	
+Armenian	2	ok	nucl1235	Eastern Armenian	language	hye	Eurasia	40.0	45.0	AM;AZ;GE;IR;SY;TR	indo1319	false	
+Mongolian	2	ok	halh1238	Halh Mongolian	language	khk	Eurasia	48.32397	106.28874	MN;RU	mong1349	false	
+Urdu	2	ok	urdu1245	Urdu	language	urd	Eurasia	25.0	67.0	AF;BD;IN;PK	indo1319	false	
+Bengali	2	ok	beng1280	Bengali	language	ben	Eurasia	24.0	90.0	BD;IN;NP	indo1319	false	
+Punjabi	2	ok	panj1256	Eastern Panjabi	language	pan	Eurasia	30.0368	75.6702	BD;IN;PK	indo1319	false	
+Tamil	2	ok	tami1289	Tamil	language	tam	Eurasia	10.520219	78.825989	IN;LK	drav1251	false	
+Telugu	2	ok	telu1262	Telugu	language	tel	Eurasia	16.4529	78.7024	IN	drav1251	false	
+Marathi	2	ok	mara1378	Marathi	language	mar	Eurasia	17.9344	76.6665	IN	indo1319	false	
+Gujarati	2	ok	guja1252	Gujarati	language	guj	Eurasia	22.687	71.0962	BD;IN;PK	indo1319	false	
+Malayalam	2	ok	mala1464	Malayalam	language	mal	Eurasia	9.59208	76.7651	IN	drav1251	false	
+Kannada	2	ok	nucl1305	Kannada	language	kan	Eurasia	13.5878	76.1198	IN	drav1251	false	
+Nepali	2	ok	nepa1254	Nepali	language	npi	Eurasia	28.0	85.0	NP	indo1319	false	
+Sinhala	2	ok	sinh1246	Sinhala	language	sin	Eurasia	8.0	81.0	LK	indo1319	false	
+Burmese	2	ok	nucl1310	Burmese	language	mya	Eurasia	20.7926	93.9665	BD;MM;TH	sino1245	false	
+Khmer	2	ok	cent1989	Central Khmer	language	khm	Eurasia	12.0515	105.015	KH;LA;TH;VN	aust1305	false	
+Lao	2	ok	laoo1244	Lao	language	lao	Eurasia	19.0	102.46	KH;LA;TH	taik1256	false	
+Tagalog	2	ok	taga1270	Tagalog	language	tgl	Papunesia	14.06	121.747	PH	aust1307	false	
+Indonesian	2	ok	indo1316	Standard Indonesian	language	ind	Papunesia	-7.33458	109.716	ID;NL;PH;SA;SG;US	aust1307	false	
+Malay	2	ok	stan1306	Standard Malay	language	zsm	Eurasia	3.08896	101.699	BN;MY;SG	aust1307	false	
+Javanese	2	ok	java1254	Javanese	language	jav	Papunesia	-7.001	109.287	ID;MY	aust1307	false	
+Azerbaijani	3	ok	nort2697	North Azerbaijani	language	azj	Eurasia	40.97768	46.4737	AM;AZ;GE;IR;RU;TR	turk1311	false	
+Kazakh	3	ok	kaza1248	Kazakh	language	kaz	Eurasia	51.17	71.454	AF;CN;IR;KG;KZ;MN;RU;TJ;TM;UZ	turk1311	false	
+Uzbek	3	ok	nort2690	Northern Uzbek	language	uzn	Eurasia	40.886	69.211	AF;CN;KG;KZ;TJ;TM;UZ	turk1311	false	
+Kyrgyz	3	ok	kirg1245	Kirghiz	language	kir	Eurasia	42.0	74.0	AF;CN;KG;KZ;TJ;UZ	turk1311	false	
+Turkmen	3	ok	turk1304	Turkmen	language	tuk	Eurasia	37.08719	59.17574	AF;IQ;IR;PK;TJ;TM;TR;UZ	turk1311	false	
+Tatar	3	ok	tata1255	Tatar	language	tat	Eurasia	55.79592	49.11577	AZ;BY;CN;EE;FI;GE;KZ;LT;LV;RU;UA	turk1311	false	
+Bashkir	3	ok	bash1264	Bashkir	language	bak	Eurasia	53.59671	56.55937	KZ;RU;UA	turk1311	false	
+Chuvash	3	ok	chuv1255	Chuvash	language	chv	Eurasia	55.48701	47.16298	EE;KZ;RU	turk1311	false	
+Sakha	3	ok	yaku1245	Sakha	language	sah	Eurasia	61.69744	133.98031	RU	turk1311	false	
+Uyghur	3	ok	uigh1240	Uighur	language	uig	Eurasia	43.88	87.38	CN;IN;KG;KZ;MN;PK;UZ	turk1311	false	
+Chechen	3	ok	chec1245	Chechen	language	che	Eurasia	43.5	45.5	GE;KZ;RU	nakh1245	false	
+Ossetian	3	ok	iron1242	Iron Ossetian	language	oss	Eurasia	42.98	44.61	RU	indo1319	false	
+Abkhaz	3	ok	abkh1244	Abkhaz	language	abk	Eurasia	43.056218	41.159115	GE;RU;TR	abkh1242	false	
+Tajik	3	ok	taji1245	Tajik	language	tgk	Eurasia	38.8213	68.5549	AF;CN;KG;TJ;UZ	indo1319	false	
+Erzya	3	ok	erzy1239	Erzya	language	myv	Eurasia	52.8548	45.3901	AZ;BY;EE;KZ;LT;LV;RU;UA	ural1272	false	
+Komi	3	ok	komi1268	Komi-Zyrian	language	kpv	Eurasia	64.0527	54.946	RU	ural1272	false	
+Udmurt	3	ok	udmu1245	Udmurt	language	udm	Eurasia	56.12921	52.63548	KZ;RU	ural1272	false	
+Meadow Mari	3	ok	east2328	Eastern Mari	language	mhr	Eurasia	55.8307	48.405	KZ;RU	ural1272	false	
+Northern Sami	3	ok	nort2671	North Saami	language	sme	Eurasia	68.725	22.1113	FI;NO;RU;SE	ural1272	false	
+Faroese	3	ok	faro1244	Faroese	language	fao	Eurasia	62.0732	-6.88497	DK;FO	indo1319	false	
+West Frisian	3	ok	west2354	Western Frisian	language	fry	Eurasia	53.143	5.86091	NL	indo1319	false	
+Luxembourgish	3	ok	luxe1241	Moselle Franconian	language	ltz	Eurasia	49.6839	6.14931	BE;DE;FR;LU	indo1319	false	
+Occitan	3	ok	occi1239	Occitan	language	oci	Eurasia	44.1415	6.82979	AD;ES;FR;IT;MC	indo1319	false	
+Sardinian	3	ok	logu1236	Logudorese Sardinian	language	src	Eurasia	40.49	9.09957	IT	indo1319	false	
+Asturian	3	ok	astu1246	Asturian	dialect		Eurasia	42.4181	-6.02227		indo1319		
+Aragonese	3	ok	arag1245	Aragonese	language	arg	Eurasia	42.4669	-0.00919	ES;FR	indo1319	false	
+Breton	3	ok	bret1244	Breton	language	bre	Eurasia	48.2452	-3.78934	FR	indo1319	false	
+Romansh	3	ok	roma1326	Romansh	language	roh	Eurasia	46.5538	9.92812	AT;CH;IT	indo1319	false	
+Kabyle	3	ok	kaby1243	Kabyle	language	kab	Africa	36.4103	4.76137	DZ	afro1255	false	
+Wolof	3	ok	nucl1347	Wolof	language	wol	Africa	15.2534	-15.383	GM;GW;ML;MR;SN	atla1278	false	
+Twi	3	ok	akan1250	Akan	language	aka	Africa	6.34756	-1.33254	GH;TG	atla1278	false	
+Bambara	3	ok	bamb1269	Bambara	language	bam	Africa	12.9	-7.65	CI;GN;ML;SN	mand1469	false	
+Oromo	3	ok	west2721	West Central Oromo	language	gaz	Africa	8.81391	36.7365	ET;SD	afro1255	false	
+Tigrinya	3	ok	tigr1271	Tigrinya	language	tir	Africa	15.3359	38.9266	DJ;ER;ET;SD	afro1255	false	
+Luganda	3	ok	gand1255	Ganda	language	lug	Africa	0.66884	32.15153	UG	atla1278	false	
+Kinyarwanda	3	ok	kiny1244	Kinyarwanda	language	kin	Africa	-1.56771	29.6441	BI;CD;RW;TZ;UG	atla1278	false	
+Shona	3	ok	shon1251	Shona	language	sna	Africa	-17.20849	29.75725	BW;ZA;ZM;ZW	atla1278	false	
+Xhosa	3	ok	xhos1239	Xhosa	language	xho	Africa	-31.0389	28.0769	BW;LS;ZA	atla1278	false	
+Cebuano	3	ok	cebu1242	Cebuano	language	ceb	Papunesia	8.38799	124.367	PH	aust1307	false	
+Sundanese	3	ok	sund1252	Sundanese	language	sun	Papunesia	-6.89708	107.106	ID	aust1307	false	
+Quechua	3	ok	cusc1236	Cusco Quechua	language	quz	South America	-14.0853	-71.7663	PE	quec1387	false	
