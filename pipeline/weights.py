@@ -59,7 +59,10 @@ DEFAULT_SHARES = os.path.join(sources.DATA_DIR, "shares.tsv")
 # below a country to resolve yet. A gridded source (WorldPop, GPW, Kontur) would
 # drop in behind the same cell interface and reward a much finer grid.
 TARGET_CELLS = 7000
-MIN_CELL = 0.012
+# Small enough that a tiny footprint still gets a real grid. Malta is 313 km2,
+# about 27 km across, and at a 1.3 km floor it had 20 cells to its name and drew
+# as a blur. The cap on grid dimensions keeps the cost bounded either way.
+MIN_CELL = 0.002
 # Caps the grid for a footprint scattered across the planet.
 MAX_DIM = 420
 
@@ -297,6 +300,47 @@ def rings_of(geometry):
     return [[tuple(p[:2]) for p in poly[0]] for poly in polys if poly and len(poly[0]) >= 4]
 
 
+def shift_east(rings, ring_span=180.0):
+    """Place rings into a grid that has already been unwrapped past 180.
+
+    Decided per ring, because one rule does not fit all three cases:
+
+      - a ring crossing the date line gets only its western half moved, so the
+        two halves meet instead of spanning the globe
+      - a ring wholly in the west moves whole, which is what Canada needs; it
+        crosses nothing itself and unwrap_rings would leave it behind
+      - a ring straddling the prime meridian stays put. Moving half of France
+        drags its ring from 8 degrees round to 355 and the scanline fills
+        everything between, which put France and Great Britain inside North
+        American English.
+    """
+    out = []
+    for ring in rings:
+        xs = [p[0] for p in ring]
+        if max(xs) - min(xs) > ring_span:
+            out.append([((p[0] + 360.0) if p[0] < 0 else p[0], p[1]) for p in ring])
+        elif max(xs) < 0:
+            out.append([(p[0] + 360.0, p[1]) for p in ring])
+        else:
+            out.append([tuple(p) for p in ring])
+    return out
+
+
+def unwrap_rings(rings):
+    """Shift western longitudes east when a footprint crosses the date line.
+
+    Returns (rings, wrapped). North American English reaches the Aleutians and
+    New Zealand English the Chathams, so both carry longitudes near -180 and
+    near +180. Taken raw the bounding box is 358 degrees of mostly ocean, which
+    both coarsens the grid and leaves the renderer drawing into a rectangle of
+    negative width. Shifted, the pieces sit side by side.
+    """
+    xs = [p[0] for ring in rings for p in ring]
+    if not xs or max(xs) - min(xs) <= 180:
+        return rings, False
+    return shift_east(rings), True
+
+
 def read_shares(path):
     """entry -> {ISO: share}. Shares are relative and get normalised per entry."""
     out = {}
@@ -367,9 +411,8 @@ def cell_area_km2(grid, iy):
     return (grid.cell * 111.32) ** 2 * max(math.cos(math.radians(lat)), 0.02)
 
 
-def build_entry(feature, grid, table, cities, share_map):
+def build_entry(rings, wrapped, grid, table, cities, share_map):
     """Return (cells, by_country, unauthored) for one entry."""
-    rings = rings_of(feature["geometry"])
     inside = rasterise(rings, grid)
     if not inside:
         return {}, {}, False
@@ -378,15 +421,21 @@ def build_entry(feature, grid, table, cities, share_map):
     lat1 = grid.lat0 + grid.rows * grid.cell
     owner = {}
     for iso, country in table.items():
-        box = country["bbox"]
+        rings_c, box = country["rings"], country["bbox"]
+        if wrapped:
+            rings_c = shift_east(rings_c)
+            cxs = [p[0] for r in rings_c for p in r]
+            box = (min(cxs), box[1], max(cxs), box[3])
         if box[2] < grid.lon0 or box[0] > lon1 or box[3] < grid.lat0 or box[1] > lat1:
             continue
-        for cell in rasterise(country["rings"], grid):
+        for cell in rasterise(rings_c, grid):
             if cell in inside and cell not in owner:
                 owner[cell] = iso
 
     urban = {}
     for lon, lat, pop, _iso in cities:
+        if wrapped and lon < 0:
+            lon += 360.0
         if not (grid.lon0 - 1 <= lon < lon1 + 1 and grid.lat0 - 1 <= lat < lat1 + 1):
             continue
         splat_city(urban, grid, lon, lat, pop, inside)
@@ -436,13 +485,13 @@ def main():
     out, unauthored, empty = [], [], []
     for feature in footprints["features"]:
         name = feature["properties"]["entry"]
-        rings = rings_of(feature["geometry"])
+        rings, wrapped = unwrap_rings(rings_of(feature["geometry"]))
         xs = [p[0] for r in rings for p in r]
         ys = [p[1] for r in rings for p in r]
         area = sum(ring_area_km2(r) for r in rings)
         grid = grid_for((min(xs), min(ys), max(xs), max(ys)), area, args.target_cells)
         cells, by_country, needs = build_entry(
-            feature, grid, table, cities, shares.get(name))
+            rings, wrapped, grid, table, cities, shares.get(name))
         if not cells:
             empty.append(name)
             continue
@@ -453,6 +502,7 @@ def main():
             "tier": feature["properties"]["tier"],
             "kind": feature["properties"]["kind"],
             "origin": [round(grid.lon0, 4), round(grid.lat0, 4)],
+            "wrapped": wrapped,
             "cell": round(grid.cell, 5),
             "cols": grid.cols, "rows": grid.rows,
             "by_country": by_country,

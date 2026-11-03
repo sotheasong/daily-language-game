@@ -55,7 +55,8 @@ def evaluate(feats, dens, pins, floor, decay):
         entry = row["entry"]
         lat, lon = float(row["lat"]), float(row["lon"])
         rings = rings_of(feats[entry])
-        inside = scoring.point_in_rings(lat, lon, rings)
+        in_polygon = scoring.point_in_rings(lat, lon, rings)
+        inside = scoring.is_inside(dens[entry], lat, lon, in_polygon)
         distance = 0.0 if inside else scoring.nearest_km(lat, lon, rings)
         weight = scoring.weight_at(dens[entry], lat, lon) if inside else 0.0
         points = scoring.score(inside, weight, distance, floor=floor, decay_km=decay)

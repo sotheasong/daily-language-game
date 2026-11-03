@@ -13,6 +13,58 @@ import unittest
 from pipeline import weights
 
 
+class Antimeridian(unittest.TestCase):
+    """A footprint crossing the date line has to be unwrapped before gridding.
+
+    North American English reaches the Aleutians and New Zealand English the
+    Chathams, so both have longitudes near -180 and near +180. Taken raw, the
+    bounding box is 358 degrees of mostly ocean: the grid's cells come out at
+    about 60 km, and the renderer shifts the two corners independently and ends
+    up drawing the field into a rectangle of negative width.
+    """
+
+    def test_a_footprint_crossing_the_date_line_is_unwrapped(self):
+        rings = [[(-178.0, 52.0), (179.0, 52.0), (179.0, 51.0), (-178.0, 51.0),
+                  (-178.0, 52.0)]]
+        got, wrapped = weights.unwrap_rings(rings)
+        self.assertTrue(wrapped)
+        xs = [p[0] for r in got for p in r]
+        self.assertLess(max(xs) - min(xs), 180, "the pieces should sit side by side")
+
+    def test_a_country_inside_a_wrapped_grid_is_shifted_unconditionally(self):
+        # The bug this exists to stop. Canada spans 89 degrees, so unwrap_rings
+        # leaves it alone, and inside North American English's wrapped grid it
+        # then sits at negative longitudes with no cells at all. Canada dropped
+        # out of the entry entirely and 60% of the footprint read as sea.
+        canada = [[(-120.0, 50.0), (-60.0, 50.0), (-60.0, 60.0), (-120.0, 60.0),
+                   (-120.0, 50.0)]]
+        self.assertFalse(weights.unwrap_rings(canada)[1], "not a crosser on its own")
+        xs = [p[0] for r in weights.shift_east(canada) for p in r]
+        self.assertEqual(min(xs), 240.0)
+
+    def test_a_country_straddling_the_prime_meridian_is_left_where_it_is(self):
+        # The second bug. Shifting only the western half of France drags its
+        # ring from 8 degrees round to 355, a polygon spanning the whole world,
+        # and the scanline then fills everything between. France and Great
+        # Britain turned up holding 51% of North American English.
+        france = [[(-5.0, 43.0), (8.0, 43.0), (8.0, 51.0), (-5.0, 51.0), (-5.0, 43.0)]]
+        xs = [p[0] for r in weights.shift_east(france) for p in r]
+        self.assertEqual((min(xs), max(xs)), (-5.0, 8.0), "left alone")
+
+    def test_a_ring_straddling_the_date_line_shifts_only_its_western_half(self):
+        aleutian = [[(179.0, 52.0), (-179.0, 52.0), (-179.0, 51.0), (179.0, 51.0),
+                     (179.0, 52.0)]]
+        xs = [p[0] for r in weights.shift_east(aleutian) for p in r]
+        self.assertEqual((min(xs), max(xs)), (179.0, 181.0))
+
+    def test_an_ordinary_footprint_is_left_alone(self):
+        rings = [[(100.0, 10.0), (108.0, 10.0), (108.0, 14.0), (100.0, 14.0),
+                  (100.0, 10.0)]]
+        got, wrapped = weights.unwrap_rings(rings)
+        self.assertFalse(wrapped)
+        self.assertEqual(got, rings)
+
+
 class GridSizing(unittest.TestCase):
     """Cells are sized by the footprint's area, not its bounding box.
 

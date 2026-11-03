@@ -27,7 +27,7 @@ import math
 import os
 import sys
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASEMAP = os.path.join(REPO, ".cache", "geo", "ne_10m_admin_0_countries.geojson")
@@ -60,6 +60,43 @@ def polygons(geometry):
     if kind == "MultiPolygon":
         return list(geometry["coordinates"])
     return []
+
+
+def shift_east(rings):
+    """Move rings into unwrapped space, deciding per ring.
+
+    Mirrors pipeline.weights.shift_east. A ring crossing the date line moves
+    only its western half, a ring wholly in the west moves whole, and a ring
+    straddling the prime meridian stays put.
+    """
+    out = []
+    for ring in rings:
+        xs = [p[0] for p in ring]
+        if max(xs) - min(xs) > 180:
+            out.append([[p[0] + 360.0 if p[0] < 0 else p[0], p[1]] for p in ring])
+        elif max(xs) < 0:
+            out.append([[p[0] + 360.0, p[1]] for p in ring])
+        else:
+            out.append([list(p[:2]) for p in ring])
+    return out
+
+
+def unwrap(geometry):
+    """Return (polygons, wrapped) with the date line taken out of the way."""
+    polys = polygons(geometry)
+    xs = [p[0] for poly in polys for ring in poly for p in ring]
+    if not xs or max(xs) - min(xs) <= 180:
+        return polys, False
+    return [shift_east(poly) for poly in polys], True
+
+
+def bounds_of(polys):
+    xs, ys = [], []
+    for poly in polys:
+        for ring in poly:
+            for pt in ring:
+                xs.append(pt[0]); ys.append(pt[1])
+    return min(xs), min(ys), max(xs), max(ys)
 
 
 def bounds(geometry):
@@ -97,12 +134,16 @@ def projector(view, size):
     return project
 
 
-def draw_geometry(draw, geometry, project, fill, outline, width=1):
-    for poly in polygons(geometry):
+def draw_polys(draw, polys, project, fill, outline, width=1):
+    for poly in polys:
         for i, ring in enumerate(poly):
             pts = [project(p) for p in ring]
             if len(pts) >= 3:
                 draw.polygon(pts, fill=(None if i else fill), outline=outline, width=width)
+
+
+def draw_geometry(draw, geometry, project, fill, outline, width=1):
+    draw_polys(draw, polygons(geometry), project, fill, outline, width)
 
 
 def ramp(t):
@@ -136,19 +177,28 @@ def density_layer(entry_density, view, size):
 
 def panel(entry, feature, basemap, dens, show_density, size=PANEL):
     big = (size[0] * SUPERSAMPLE, size[1] * SUPERSAMPLE)
-    view = make_view(bounds(feature["geometry"]), big)
+    fp_polys, wrapped = unwrap(feature["geometry"])
+    view = make_view(bounds_of(fp_polys), big)
     project = projector(view, big)
 
     img = Image.new("RGB", big, SEA)
     draw = ImageDraw.Draw(img)
+    # Land doubles as the clip: a footprint is a smooth blob and encloses the
+    # water between islands, so the field has to stop at the coast.
+    land_mask = Image.new("L", big, 0)
+    land_draw = ImageDraw.Draw(land_mask)
     for f in basemap["features"]:
-        b = bounds(f["geometry"])
+        polys = [shift_east(poly) for poly in polygons(f["geometry"])] if wrapped \
+            else polygons(f["geometry"])
+        b = bounds_of(polys)
         if b[2] < view[0] or b[0] > view[2] or b[3] < view[1] or b[1] > view[3]:
             continue
-        draw_geometry(draw, f["geometry"], project, LAND, BORDER, SUPERSAMPLE)
+        draw_polys(draw, polys, project, LAND, BORDER, SUPERSAMPLE)
+        draw_polys(land_draw, polys, project, 255, 255, 1)
 
     mask = Image.new("L", big, 0)
-    draw_geometry(ImageDraw.Draw(mask), feature["geometry"], project, 255, 255, 1)
+    draw_polys(ImageDraw.Draw(mask), fp_polys, project, 255, 255, 1)
+    mask = ImageChops.multiply(mask, land_mask)
 
     if show_density and dens:
         img.paste(density_layer(dens, view, big), (0, 0), mask)
@@ -157,8 +207,8 @@ def panel(entry, feature, basemap, dens, show_density, size=PANEL):
         img = Image.blend(img, Image.composite(flat, img, mask), 0.42)
 
     outline = Image.new("RGBA", big, (0, 0, 0, 0))
-    draw_geometry(ImageDraw.Draw(outline), feature["geometry"], project,
-                  None, EDGE + (255,), 2 * SUPERSAMPLE)
+    draw_polys(ImageDraw.Draw(outline), fp_polys, project,
+               None, EDGE + (255,), 2 * SUPERSAMPLE)
     img = Image.alpha_composite(img.convert("RGBA"), outline).convert("RGB")
     img = img.resize(size, Image.LANCZOS)
 

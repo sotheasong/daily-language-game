@@ -83,6 +83,26 @@ south of the Garonne, Provence-Alpes-Côte d'Azur, and the southern edge of
 Auvergne-Rhône-Alpes. Weights currently read FR 97 / IT 3, which is the right
 share applied to the wrong shape.
 
+## Polygon refinement, done 2026-11-03
+
+**Footprints are now clipped to land.** Measured first: the median footprint is
+only 0.16% sea, and just 8 of 136 are above 5%, so a general polygon-boolean
+engine was not worth building. The sea is concentrated in island entries, where
+Asher's smooth blob encloses the water between them: Faroese 25.7%, Somali
+25.6%, Maltese 17.2%, Irish English 16.7%, Scottish Gaelic 12.9%.
+
+Fixed in two places rather than by rewriting the geometry:
+
+- `scoring.is_inside` requires the pin to be on land as well as in the polygon.
+  The density grid already knows, since a cell exists only where the footprint
+  meets a country, so a zero weight there is open water.
+- Both renderers clip the field by land as well as by the footprint. In canvas
+  two `clip()` calls intersect; in the preview the two masks are multiplied.
+
+**Small footprints get a real grid.** The minimum cell went from 1.3 km to
+0.2 km. Malta is 313 km2 and about 27 km across, so at the old floor it had 20
+cells to its name and drew as a blur.
+
 ## Khmer does not cover eastern Cambodia
 
 Measured 2026-11-03: the footprint covers **70.5% of Cambodia**, and 79% of what

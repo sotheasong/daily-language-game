@@ -60,9 +60,40 @@ class WeightLookup(unittest.TestCase):
         grid = {"origin": [0.0, 0.0], "cell": 1.0, "cells": {(0, 0): 0.2, (1, 1): 0.9}}
         self.assertAlmostEqual(scoring.weight_at(grid, 0.5, 0.5), 0.2)
 
+    def test_a_wrapped_grid_reads_a_western_longitude(self):
+        # North American English's grid lives in unwrapped space, 172 to 308,
+        # so a pin in Alaska at -150 has to be read as 210.
+        grid = {"origin": [200.0, 60.0], "cell": 1.0,
+                "cells": {(10, 0): 0.7}, "wrapped": True}
+        self.assertAlmostEqual(scoring.weight_at(grid, 60.5, -150.0), 0.7)
+
     def test_a_pin_nowhere_near_a_cell_gets_nothing(self):
         grid = {"origin": [0.0, 0.0], "cell": 1.0, "cells": {(50, 50): 1.0}}
         self.assertEqual(scoring.weight_at(grid, 0.5, 0.5), 0.0)
+
+
+class PinMustBeOnLand(unittest.TestCase):
+    """Inside the polygon is not enough. The pin also has to be on land.
+
+    Asher draws smooth blobs, so a footprint encloses the water between islands
+    and along a coast. Measured 2026-11-03: Faroese is 25.7% sea, Somali 25.6%,
+    Maltese 17.2%, Scottish Gaelic 12.9%. Pinning the middle of the Minch
+    should not score as a hit.
+
+    The density grid already knows: a cell only exists where the footprint meets
+    a country, so a zero weight is the sea.
+    """
+
+    GRID = {"origin": [0.0, 0.0], "cell": 1.0, "cells": {(5, 5): 0.4}}
+
+    def test_open_water_inside_the_polygon_does_not_count_as_inside(self):
+        self.assertFalse(scoring.is_inside(self.GRID, 0.5, 0.5, in_polygon=True))
+
+    def test_land_inside_the_polygon_counts(self):
+        self.assertTrue(scoring.is_inside(self.GRID, 5.5, 5.5, in_polygon=True))
+
+    def test_outside_the_polygon_is_outside_whatever_the_grid_says(self):
+        self.assertFalse(scoring.is_inside(self.GRID, 5.5, 5.5, in_polygon=False))
 
 
 class Score(unittest.TestCase):

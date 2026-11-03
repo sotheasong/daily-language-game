@@ -123,6 +123,10 @@ def weight_at(grid, lat, lon):
     """Weight at a point, borrowing from the nearest filled cell if need be."""
     origin_lon, origin_lat = grid["origin"]
     cell = grid["cell"]
+    if grid.get("wrapped") and lon < 0:
+        # The grid was built in unwrapped space because the footprint crosses
+        # the date line. Alaska at -150 is 210 in that space.
+        lon += 360.0
     ix = int(math.floor((lon - origin_lon) / cell))
     iy = int(math.floor((lat - origin_lat) / cell))
     cells = grid["cells"]
@@ -144,6 +148,16 @@ def weight_at(grid, lat, lon):
         if best is not None:
             return best
     return 0.0
+
+
+def is_inside(grid, lat, lon, in_polygon):
+    """True when a pin is both within the footprint and on land.
+
+    Asher draws smooth blobs, so a footprint encloses the water between islands.
+    The density grid already knows the difference: a cell exists only where the
+    footprint meets a country, so a zero weight there is open water.
+    """
+    return bool(in_polygon) and weight_at(grid, lat, lon) > 0.0
 
 
 def score(inside, weight, distance_km, multiplier=1.0,
