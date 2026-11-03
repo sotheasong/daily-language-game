@@ -48,12 +48,18 @@ NATURAL_EARTH = (
 )
 DEFAULT_SHARES = os.path.join(sources.DATA_DIR, "shares.tsv")
 
-# Enough cells to shade a footprint convincingly without shipping a raster.
-# Spanish spans a third of the planet; 2,400 cells put it at roughly 60 km,
-# which is finer than the scoring formula can use anyway, since the weight only
-# modulates an inside-score by plus or minus 40 percent.
-TARGET_CELLS = 2400
-MIN_CELL = 0.02
+# Enough cells that the shading reads as a field rather than as bins. At 2,400
+# Spanish drew in 60 km blocks and the squares were the first thing you saw.
+# 7,000 puts it near 35 km, and the renderer interpolates between cells, so what
+# shows is the kernel rather than the grid.
+#
+# Scalable on purpose: raise this and rerun when a better population source
+# lands. The density source is the only thing that limits it. Natural Earth
+# gives 7,342 towns and a flat rural baseline per country, so there is no detail
+# below a country to resolve yet. A gridded source (WorldPop, GPW, Kontur) would
+# drop in behind the same cell interface and reward a much finer grid.
+TARGET_CELLS = 7000
+MIN_CELL = 0.012
 # Caps the grid for a footprint scattered across the planet.
 MAX_DIM = 420
 
@@ -155,6 +161,67 @@ def snap_to_filled(cell, filled):
         if best is not None:
             return best
     return None
+
+
+# A city's catchment, as the standard deviation of its kernel. Bigger cities
+# reach further: a market town is a few km across, Mexico City is tens.
+SIGMA_BASE_KM = 6.0
+SIGMA_REF_POP = 10_000.0
+SIGMA_EXPONENT = 0.22
+SIGMA_MIN_KM, SIGMA_MAX_KM = 5.0, 45.0
+KERNEL_REACH = 3.0      # standard deviations before the kernel is cut off
+
+
+def city_sigma_km(pop):
+    """Catchment radius for a city of this size."""
+    scaled = SIGMA_BASE_KM * (max(pop, 1.0) / SIGMA_REF_POP) ** SIGMA_EXPONENT
+    return min(max(scaled, SIGMA_MIN_KM), SIGMA_MAX_KM)
+
+
+def splat_city(field, grid, lon, lat, pop, filled):
+    """Add a city's people to `field` as a Gaussian hill rather than one cell.
+
+    Normalised over the land the kernel can reach, so every person lands
+    somewhere inside the footprint. A coastal city whose kernel is half sea puts
+    all of its people on the land half instead of losing them overboard.
+
+    The kernel never crosses into cells outside the footprint, which is what
+    keeps a country border a hard step while the inside of a country is smooth.
+    """
+    sigma = city_sigma_km(pop)
+    km_per_deg_lat = 111.32
+    km_per_deg_lon = max(111.32 * math.cos(math.radians(lat)), 1.0)
+    reach_deg_lon = KERNEL_REACH * sigma / km_per_deg_lon
+    reach_deg_lat = KERNEL_REACH * sigma / km_per_deg_lat
+
+    ix0 = int(math.floor((lon - reach_deg_lon - grid.lon0) / grid.cell))
+    ix1 = int(math.ceil((lon + reach_deg_lon - grid.lon0) / grid.cell))
+    iy0 = int(math.floor((lat - reach_deg_lat - grid.lat0) / grid.cell))
+    iy1 = int(math.ceil((lat + reach_deg_lat - grid.lat0) / grid.cell))
+
+    kernel = {}
+    for ix in range(max(ix0, 0), min(ix1, grid.cols - 1) + 1):
+        for iy in range(max(iy0, 0), min(iy1, grid.rows - 1) + 1):
+            if (ix, iy) not in filled:
+                continue
+            dx = (grid.lon0 + (ix + 0.5) * grid.cell - lon) * km_per_deg_lon
+            dy = (grid.lat0 + (iy + 0.5) * grid.cell - lat) * km_per_deg_lat
+            value = math.exp(-0.5 * (dx * dx + dy * dy) / (sigma * sigma))
+            if value > 1e-4:
+                kernel[(ix, iy)] = value
+
+    if not kernel:
+        # Nothing reachable, so the city sits further out than its own catchment.
+        centre = (int((lon - grid.lon0) / grid.cell), int((lat - grid.lat0) / grid.cell))
+        landed = snap_to_filled(centre, filled)
+        if landed is not None:
+            field[landed] = field.get(landed, 0.0) + pop
+        return field
+
+    total = sum(kernel.values())
+    for cell, value in kernel.items():
+        field[cell] = field.get(cell, 0.0) + pop * value / total
+    return field
 
 
 def population_shares(cells):
@@ -318,14 +385,11 @@ def build_entry(feature, grid, table, cities, share_map):
             if cell in inside and cell not in owner:
                 owner[cell] = iso
 
-    urban = collections.defaultdict(float)
+    urban = {}
     for lon, lat, pop, _iso in cities:
-        if not (grid.lon0 <= lon < lon1 and grid.lat0 <= lat < lat1):
+        if not (grid.lon0 - 1 <= lon < lon1 + 1 and grid.lat0 - 1 <= lat < lat1 + 1):
             continue
-        cell = (int((lon - grid.lon0) / grid.cell), int((lat - grid.lat0) / grid.cell))
-        landed = snap_to_filled(cell, inside)
-        if landed is not None:
-            urban[landed] += pop
+        splat_city(urban, grid, lon, lat, pop, inside)
 
     populations = {}
     for cell in inside:
@@ -334,7 +398,7 @@ def build_entry(feature, grid, table, cities, share_map):
             continue
         populations[cell] = (
             iso,
-            table[iso]["rural_per_km2"] * cell_area_km2(grid, cell[1]) + urban[cell],
+            table[iso]["rural_per_km2"] * cell_area_km2(grid, cell[1]) + urban.get(cell, 0.0),
         )
 
     shares = share_map if share_map is not None else population_shares(populations)

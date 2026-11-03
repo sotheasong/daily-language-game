@@ -129,6 +129,53 @@ class CoastalCities(unittest.TestCase):
         self.assertIsNone(weights.snap_to_filled((0, 0), {(50, 50)}))
 
 
+class UrbanKernel(unittest.TestCase):
+    """A city is a hill, not a dot.
+
+    Dropping a city's whole population into the one cell that contains it makes
+    a single bright square with nothing around it, which is what made the
+    density plot look binned. Phnom Penh is 1.4 million people spread over a
+    catchment tens of kilometres wide, so it should fall off smoothly.
+
+    The kernel is normalised over the land it can reach, so a coastal city
+    delivers all of its people onto land instead of losing half into the sea.
+    That is why country borders stay a hard step: the kernel runs inside the
+    clip, never across it.
+    """
+
+    GRID = None
+
+    def setUp(self):
+        self.GRID = weights.Grid(lon0=0.0, lat0=0.0, cell=0.05, cols=40, rows=40)
+        self.filled = {(x, y) for x in range(40) for y in range(40)}
+
+    def test_a_city_spreads_into_its_neighbours(self):
+        field = {}
+        weights.splat_city(field, self.GRID, 1.0, 1.0, 500_000, self.filled)
+        centre = (int(1.0 / 0.05), int(1.0 / 0.05))
+        neighbour = (centre[0] + 1, centre[1])
+        self.assertGreater(field.get(neighbour, 0), 0, "the hill has slopes")
+        self.assertGreater(field[centre], field[neighbour], "and a summit")
+
+    def test_every_person_is_accounted_for(self):
+        field = {}
+        weights.splat_city(field, self.GRID, 1.0, 1.0, 500_000, self.filled)
+        self.assertAlmostEqual(sum(field.values()), 500_000, delta=1)
+
+    def test_a_coastal_city_puts_all_its_people_on_land(self):
+        # Half the kernel falls in the sea. Those people live in the city, so
+        # they belong on the land half, not lost overboard.
+        land = {(x, y) for x, y in self.filled if x >= 20}
+        field = {}
+        weights.splat_city(field, self.GRID, 1.0, 1.0, 500_000, land)
+        self.assertAlmostEqual(sum(field.values()), 500_000, delta=1)
+        self.assertTrue(all(cell in land for cell in field))
+
+    def test_a_bigger_city_reaches_further(self):
+        self.assertGreater(weights.city_sigma_km(8_000_000),
+                           weights.city_sigma_km(40_000))
+
+
 class PopulationShares(unittest.TestCase):
     def test_an_unauthored_entry_derives_its_shares_from_population(self):
         # German needs no authored row. Population alone already gives

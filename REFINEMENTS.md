@@ -27,22 +27,32 @@ containment. Worth a pass over tier 1, where containment decides most rounds.
 because admin-0 Bosnia would bring the Federation with it. Needs a sub-national
 cut, which Natural Earth admin-1 can do.
 
-## Rendering
+## Rendering, done 2026-11-03
 
-**`tools/preview.py` has no supersampling.** Panels render at 460×360 and draw
-straight to that raster, so coastlines are jaggy and small parts disappear.
-Render at 2–3× and downsample with Pillow's `LANCZOS`, and make panel size a
-flag rather than a constant.
+**`tools/preview.py` now supersamples.** Everything is drawn at 3x the final
+size and downsampled with Lanczos, so coastlines are not staircases. It also
+uses Natural Earth 10m borders, the finest free set, instead of 50m.
 
-**The basemap borders are too coarse.** Both the preview and the reviewer draw
-`ne_50m_admin_0_countries`, and the reviewer simplifies it further to 0.25° to
-keep the page small. Country outlines therefore cut corners, which is most
-visible where a footprint is meant to follow a border. Use `ne_10m` for the
-preview, where file size does not matter, and a gentler simplification for the
-reviewer. This is the next thing to do after weights.
+**The density plot no longer reads as bins.** Three changes, and each fixed a
+different cause:
 
-**The reviewer caps device pixel ratio at 2.** Fine on a laptop, soft on a
-high-DPI display. The canvas also redraws on every selection with no caching.
+- A city's population used to land in one cell, making a bright square. It is
+  now a Gaussian kernel whose width grows with the city, normalised over the
+  land it reaches, so a coastal city still delivers all of its people onto land.
+- The grid went from about 2,400 cells per entry to 7,000.
+- The field is drawn at grid resolution and upscaled bicubically, then masked by
+  the footprint. Smooth inside, hard edge at the border.
+
+**The country step is deliberate and stays.** A share of speakers belongs to a
+country, so smoothing across a border would bleed Cambodia into Thailand, which
+is the thing the weights exist to prevent. The kernel runs inside the clip.
+
+**Scalable to a better population source.** Natural Earth gives 7,342 towns and
+one flat rural figure per country, so there is no detail below a country to
+resolve and a finer grid would only interpolate the same information. A gridded
+source (WorldPop, GPW, Kontur) drops in behind the same cell interface: it would
+replace `rural_per_km2` and the city splat with a real per-cell population, and
+`TARGET_CELLS` could then go up by an order of magnitude and show something new.
 
 ## Scoring consequences, for when weights land
 

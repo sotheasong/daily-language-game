@@ -102,7 +102,19 @@ not hold both.
 
 ## Now
 
-**Tuning the scoring curve.** `pipeline/scoring.py` is the reference
+**Plot refinement, done.** The density plot read as bins, from three separate
+causes. A city's population landed in one cell, making a bright square; the grid
+was coarse at about 2,400 cells; and the cells were drawn as flat rectangles. It
+is now a Gaussian kernel per city whose width grows with its population, a
+7,000-cell grid, and a field upscaled bicubically and masked by the footprint.
+Smooth inside, hard edge at the border, because the country step is the point.
+
+**Scalable to better data on purpose.** Natural Earth gives 7,342 towns and one
+flat rural figure per country, so there is nothing below a country to resolve
+yet. A gridded population source drops in behind the same cell interface and
+`TARGET_CELLS` can then go up an order of magnitude.
+
+**Done earlier: tuning the scoring curve.** `pipeline/scoring.py` is the reference
 implementation and `tools/tune_scoring.py` runs 29 worked pins through the real
 footprints and weights. All bands currently come out in order.
 
@@ -134,9 +146,6 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
    it did not, because density only varies *within* an entry. Options: scale the
    floor by footprint size, let tiers and the scheduler carry difficulty, or drop
    the inside/outside split for a pure distance-to-weighted-area curve.
-2. **Refine the plots.** Raise the render resolution, which currently draws
-   straight to 460x360 with no supersampling, and use finer country borders. See
-   `REFINEMENTS.md`.
 3. **Clip the over-extended footprints**, Khmer and Thai first, against the
    countries Glottolog lists. Branch `footprint-refinements`.
 4. **Build the clip pipeline.** Voice activity detection measuring voiced
