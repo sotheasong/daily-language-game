@@ -1,0 +1,111 @@
+entry_a	entry_b	score	shared	territory_a	territory_b
+Azerbaijani	Georgian	1.0	AM AZ GE IR RU TR	AM AZ GE IR RU TR	AM AZ GE IR RU TR
+Cebuano	Philippine English	1.0	PH	PH	PH
+Cebuano	Tagalog	1.0	PH	PH	PH
+Gujarati	Punjabi	1.0	BD IN PK	BD IN PK	BD IN PK
+Igbo	Nigerian English	1.0	NG	NG	NG
+Indian English	Kannada	1.0	IN	IN	IN
+Indian English	Malayalam	1.0	IN	IN	IN
+Indian English	Marathi	1.0	IN	IN	IN
+Indian English	Telugu	1.0	IN	IN	IN
+Irish	Irish English	1.0	GB-NIR IE	GB-NIR IE	GB-NIR IE
+Kannada	Malayalam	1.0	IN	IN	IN
+Kannada	Marathi	1.0	IN	IN	IN
+Kannada	Telugu	1.0	IN	IN	IN
+Komi	Ossetian	1.0	RU	RU	RU
+Komi	Sakha	1.0	RU	RU	RU
+Malayalam	Marathi	1.0	IN	IN	IN
+Malayalam	Telugu	1.0	IN	IN	IN
+Marathi	Telugu	1.0	IN	IN	IN
+Meadow Mari	Udmurt	1.0	KZ RU	KZ RU	KZ RU
+Ossetian	Sakha	1.0	RU	RU	RU
+Philippine English	Tagalog	1.0	PH	PH	PH
+Scottish English	Scottish Gaelic	1.0	GB-SCT	GB-SCT	GB-SCT
+Welsh	Welsh English	1.0	GB-WLS	GB-WLS	GB-WLS
+Kyrgyz	Uzbek	0.857	AF CN KG KZ TJ UZ	AF CN KG KZ TJ UZ	AF CN KG KZ TJ TM UZ
+Belarusian	Lithuanian	0.833	BY LT LV PL RU	BY LT LV PL RU UA	BY LT LV PL RU
+Kyrgyz	Tajik	0.833	AF CN KG TJ UZ	AF CN KG KZ TJ UZ	AF CN KG TJ UZ
+Catalan	Occitan	0.8	AD ES FR IT	AD ES FR IT	AD ES FR IT MC
+Finnish	Northern Sami	0.8	FI NO RU SE	EE FI NO RU SE	FI NO RU SE
+Northern Sami	Norwegian	0.8	FI NO RU SE	FI NO RU SE	FI NO RU SE SJ
+Bengali	Hindi	0.75	BD IN NP	BD IN NP	BD BT IN NP
+Gujarati	Urdu	0.75	BD IN PK	BD IN PK	AF BD IN PK
+Khmer	Lao	0.75	KH LA TH	KH LA TH VN	KH LA TH
+Pashto	Urdu	0.75	AF IN PK	AF IN PK	AF BD IN PK
+Punjabi	Urdu	0.75	BD IN PK	BD IN PK	AF BD IN PK
+Erzya	Tatar	0.727	AZ BY EE KZ LT LV RU UA	AZ BY EE KZ LT LV RU UA	AZ BY CN EE FI GE KZ LT LV RU UA
+Armenian	Azerbaijani	0.714	AM AZ GE IR TR	AM AZ GE IR SY TR	AM AZ GE IR RU TR
+Armenian	Georgian	0.714	AM AZ GE IR TR	AM AZ GE IR SY TR	AM AZ GE IR RU TR
+Tajik	Uzbek	0.714	AF CN KG TJ UZ	AF CN KG TJ UZ	AF CN KG KZ TJ TM UZ
+Kazakh	Uzbek	0.7	AF CN KG KZ TJ TM UZ	AF CN IR KG KZ MN RU TJ TM UZ	AF CN KG KZ TJ TM UZ
+Afrikaans	Shona	0.667	BW ZA ZM ZW	BW MZ NA ZA ZM ZW	BW ZA ZM ZW
+Aragonese	Basque	0.667	ES ES-AR	ES-AR	ES FR
+Asturian	Basque	0.667	ES ES-AS	ES-AS	ES FR
+Bashkir	Meadow Mari	0.667	KZ RU	KZ RU UA	KZ RU
+Bashkir	Udmurt	0.667	KZ RU	KZ RU UA	KZ RU
+Basque	Galician	0.667	ES ES-GA	ES FR	ES-GA
+Cantonese	Vietnamese	0.667	CN VN	CN VN	CN LA VN
+Chechen	Meadow Mari	0.667	KZ RU	GE KZ RU	KZ RU
+Chechen	Udmurt	0.667	KZ RU	GE KZ RU	KZ RU
+Chuvash	Meadow Mari	0.667	KZ RU	EE KZ RU	KZ RU
+Chuvash	Udmurt	0.667	KZ RU	EE KZ RU	KZ RU
+Finnish	Norwegian	0.667	FI NO RU SE	EE FI NO RU SE	FI NO RU SE SJ
+Latvian	Lithuanian	0.667	BY LT LV RU	BY EE LT LV RU	BY LT LV PL RU
+Croatian	Slovenian	0.625	AT HR HU IT SI	AT BA HR HU IT ME RS SI	AT HR HU IT SI
+Erzya	Latvian	0.625	BY EE LT LV RU	AZ BY EE KZ LT LV RU UA	BY EE LT LV RU
+Albanian	Macedonian	0.6	AL GR MK	AL GR MK	AL BG GR MK RS
+Estonian	Latvian	0.6	EE LV RU	EE LV RU	BY EE LT LV RU
+Kazakh	Kyrgyz	0.6	AF CN KG KZ TJ UZ	AF CN IR KG KZ MN RU TJ TM UZ	AF CN KG KZ TJ UZ
+Xhosa	Zulu	0.6	BW LS ZA	BW LS ZA	BW LS MZ SZ ZA
+Belarusian	Latvian	0.571	BY LT LV RU	BY LT LV PL RU UA	BY EE LT LV RU
+Czech	Slovak	0.571	AT CZ PL SK	AT CZ PL SK	AT CZ HU PL RS SK UA
+Belarusian	Erzya	0.556	BY LT LV RU UA	BY LT LV PL RU UA	AZ BY EE KZ LT LV RU UA
+Belarusian	Polish	0.556	BY LT PL RU UA	BY LT LV PL RU UA	BY CZ DE LT PL RU SK UA
+Bulgarian	Romanian	0.556	BG MD RO RS UA	BG GR MD MK RO RS TR UA	BG HU MD RO RS UA
+Persian	Turkmen	0.556	AF IQ IR TM TR	AF AZ IQ IR TM TR	AF IQ IR PK TJ TM TR UZ
+Abkhaz	Azerbaijani	0.5	GE RU TR	GE RU TR	AM AZ GE IR RU TR
+Abkhaz	Chechen	0.5	GE RU	GE RU TR	GE KZ RU
+Abkhaz	Georgian	0.5	GE RU TR	GE RU TR	AM AZ GE IR RU TR
+Afrikaans	Southern African English	0.5	NA ZA ZW	BW MZ NA ZA ZM ZW	NA ZA ZW
+Amharic	Somali	0.5	DJ ET	DJ ET	DJ ET KE SO
+Amharic	Tigrinya	0.5	DJ ET	DJ ET	DJ ER ET SD
+Armenian	Turkish	0.5	AM AZ GE IR SY TR	AM AZ GE IR SY TR	AL AM AZ BG CY GE GR IQ IR MK SY TR
+Bashkir	Chechen	0.5	KZ RU	KZ RU UA	GE KZ RU
+Bashkir	Chuvash	0.5	KZ RU	KZ RU UA	EE KZ RU
+Basque	Breton	0.5	FR	ES FR	FR
+Basque	Catalan	0.5	ES FR	ES FR	AD ES FR IT
+Bengali	Gujarati	0.5	BD IN	BD IN NP	BD IN PK
+Bengali	Punjabi	0.5	BD IN	BD IN NP	BD IN PK
+Bulgarian	Greek	0.5	BG GR MK RO TR UA	BG GR MD MK RO RS TR UA	AL BG CY EG GR IT MK RO TR UA
+Burmese	Thai	0.5	MM TH	BD MM TH	KH MM TH
+Chechen	Chuvash	0.5	KZ RU	GE KZ RU	EE KZ RU
+Chuvash	Estonian	0.5	EE RU	EE KZ RU	EE LV RU
+Danish	Faroese	0.5	DK FO	DE DK FO GL	DK FO
+Ghanaian English	Twi	0.5	GH	GH	GH TG
+Gujarati	Pashto	0.5	IN PK	BD IN PK	AF IN PK
+Hungarian	Slovak	0.5	AT HU RS SK UA	AT HR HU RO RS SI SK UA	AT CZ HU PL RS SK UA
+Igbo	Yoruba	0.5	NG	NG	BJ NG
+Indian English	Tamil	0.5	IN	IN	IN LK
+Javanese	Malaysian English	0.5	MY	ID MY	MY
+Javanese	Sundanese	0.5	ID	ID MY	ID
+Kannada	Tamil	0.5	IN	IN	IN LK
+Kazakh	Tajik	0.5	AF CN KG TJ UZ	AF CN IR KG KZ MN RU TJ TM UZ	AF CN KG TJ UZ
+Kinyarwanda	Swahili	0.5	BI RW TZ UG	BI CD RW TZ UG	BI KE MZ RW SO TZ UG
+Komi	Meadow Mari	0.5	RU	RU	KZ RU
+Komi	Mongolian	0.5	RU	RU	MN RU
+Komi	Udmurt	0.5	RU	RU	KZ RU
+Lao	Thai	0.5	KH TH	KH LA TH	KH MM TH
+Malayalam	Tamil	0.5	IN	IN	IN LK
+Marathi	Tamil	0.5	IN	IN	IN LK
+Meadow Mari	Ossetian	0.5	RU	KZ RU	RU
+Meadow Mari	Sakha	0.5	RU	KZ RU	RU
+Mongolian	Ossetian	0.5	RU	MN RU	RU
+Mongolian	Sakha	0.5	RU	MN RU	RU
+Nigerian English	Yoruba	0.5	NG	NG	BJ NG
+Northern Sami	Swedish	0.5	FI NO SE	FI NO RU SE	AX DK FI NO SE
+Oromo	Tigrinya	0.5	ET SD	ET SD	DJ ER ET SD
+Ossetian	Udmurt	0.5	RU	RU	KZ RU
+Pashto	Punjabi	0.5	IN PK	AF IN PK	BD IN PK
+Sakha	Udmurt	0.5	RU	RU	KZ RU
+Sinhala	Tamil	0.5	LK	LK	IN LK
+Tamil	Telugu	0.5	IN	IN LK	IN
