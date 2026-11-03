@@ -39,6 +39,10 @@ def load():
     return feats, dens, list(csv.DictReader(lines, delimiter="\t"))
 
 
+def tier_of(feats, entry):
+    return feats[entry]["properties"].get("tier", "")
+
+
 def rings_of(feature):
     geom = feature["geometry"]
     polys = geom["coordinates"] if geom["type"] == "MultiPolygon" else [geom["coordinates"]]
@@ -90,7 +94,9 @@ def main():
     for row in rows:
         if row["entry"] != current:
             current = row["entry"]
-            print(f"  {current}")
+            tier = tier_of(feats, current)
+            print(f"  {current}   tier {tier}, worth "
+                  f"x{scoring.tier_weight(tier):.1f} against a tier 1 round")
         where = "inside" if row["inside"] else f"{row['km']:>6.0f} km out"
         print(f"    {row['band']:<9}{row['pin']:<24}{where:<15}"
               f"w {row['weight']:.2f}   {row['points']:>6.0f}")

@@ -114,6 +114,18 @@ flat rural figure per country, so there is nothing below a country to resolve
 yet. A gridded population source drops in behind the same cell interface and
 `TARGET_CELLS` can then go up an order of magnitude.
 
+**Footprint size is balanced by tier, decided 2026-11-03.** The largest
+footprint is 61,645 times the smallest, and density weighting does not fix that
+because it only varies *within* an entry. Tiers carry it instead: the median
+footprint is 370,745 km2 at tier 1, 91,283 at tier 2 and 50,064 at tier 3, so a
+harder round pays `TIER_WEIGHT` of 1.0, 1.4 and 1.6. That is the fourth root of
+the area ratio, not the whole of it, because a player does not pin at random and
+paying seven times for a tier 3 round would make the other four pointless.
+
+The weights are scaled within a session so every day totals the same 25,000.
+Without that, a tier 3 heavy day would be worth more than a tier 1 day and the
+one number players compare would stop meaning anything.
+
 **Done earlier: tuning the scoring curve.** `pipeline/scoring.py` is the reference
 implementation and `tools/tune_scoring.py` runs 29 worked pins through the real
 footprints and weights. All bands currently come out in order.
@@ -139,13 +151,6 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
 
 ## Next
 
-1. **Footprint size is not balanced, and it is a design decision.** The largest
-   footprint is 61,645 times the smallest. North American English covers 13% of
-   the world's land and Maltese covers 0.0002%, and both pay the same 3000 for
-   landing inside at all. The pivot notes claimed density weighting solved this;
-   it did not, because density only varies *within* an entry. Options: scale the
-   floor by footprint size, let tiers and the scheduler carry difficulty, or drop
-   the inside/outside split for a pure distance-to-weighted-area curve.
 3. **Clip the over-extended footprints**, Khmer and Thai first, against the
    countries Glottolog lists. Branch `footprint-refinements`.
 4. **Build the clip pipeline.** Voice activity detection measuring voiced
@@ -159,7 +164,6 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
 
 ## Decisions waiting on you
 
-- Footprint size balance, item 1 above. It changes how the game feels.
 - Whether the rules should say "pin where it is spoken natively". Both Glottolog
   and Asher record mother tongues, so Portuguese has no Angola and French has no
   African country at all. That convention needs to be stated or overridden.

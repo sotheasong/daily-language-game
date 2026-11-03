@@ -94,5 +94,55 @@ class Score(unittest.TestCase):
         self.assertGreaterEqual(scoring.score(inside=False, weight=0.0, distance_km=20000), 0)
 
 
+class TierWeighting(unittest.TestCase):
+    """A harder tier is worth more, so a small footprint is not a punishment.
+
+    Measured 2026-11-03: the median tier 1 footprint is 370,745 km2, tier 2 is
+    91,283 and tier 3 is 50,064. A pin is 4.1 and 7.4 times less likely to land
+    inside by area alone, and Maltese is 313 km2 against Spanish at 10 million.
+
+    The weights do not compensate in full. A player does not pin at random, so
+    paying out seven times for a tier 3 round would make the other four
+    pointless. They are the fourth root of the area ratio, which is a judgement
+    anchored on a measurement rather than a derivation.
+    """
+
+    def test_a_harder_tier_pays_more_for_the_same_pin(self):
+        easy = scoring.score(inside=True, weight=0.5, distance_km=0.0,
+                             multiplier=scoring.TIER_WEIGHT["1"])
+        hard = scoring.score(inside=True, weight=0.5, distance_km=0.0,
+                             multiplier=scoring.TIER_WEIGHT["3"])
+        self.assertGreater(hard, easy)
+
+    def test_the_easiest_tier_carries_no_bonus(self):
+        self.assertEqual(scoring.TIER_WEIGHT["1"], 1.0)
+
+    def test_an_unknown_tier_gets_no_silent_bonus(self):
+        self.assertEqual(scoring.tier_weight("not a tier"), 1.0)
+
+
+class SessionTotals(unittest.TestCase):
+    """Every session is out of the same maximum, whatever tiers it drew.
+
+    Tier weighting makes a round worth more, which would make a tier 3 heavy day
+    worth more than a tier 1 day. For a daily game that breaks the one number
+    players compare, so the weights are scaled within a session: a hard round is
+    worth more than the others *that day*, and the day still totals the same.
+    """
+
+    def test_a_session_is_always_out_of_the_same_maximum(self):
+        for tiers in (["1", "1", "1", "1", "1"], ["3", "3", "2", "1", "2"]):
+            got = scoring.session_multipliers(tiers)
+            self.assertAlmostEqual(sum(got), len(tiers))
+
+    def test_the_harder_round_is_still_worth_more_within_its_session(self):
+        got = scoring.session_multipliers(["1", "1", "1", "3", "3"])
+        self.assertGreater(got[3], got[0])
+
+    def test_a_session_of_one_tier_pays_every_round_the_same(self):
+        got = scoring.session_multipliers(["2", "2", "2"])
+        self.assertEqual(got, [1.0, 1.0, 1.0])
+
+
 if __name__ == "__main__":
     unittest.main()

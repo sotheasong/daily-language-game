@@ -30,6 +30,37 @@ FLOOR = 0.6          # share of the maximum a pin earns for landing inside at al
 DECAY_KM = 1500.0    # distance at which an outside pin keeps 1/e of the floor
 
 
+# A harder tier is worth more, so a small footprint is not a punishment.
+# Measured 2026-11-03: the median footprint is 370,745 km2 at tier 1, 91,283 at
+# tier 2 and 50,064 at tier 3, which makes a pin 4.1 and 7.4 times less likely
+# to land inside by area alone. Maltese is 313 km2 against Spanish at 10 million.
+#
+# These do not compensate in full. A player does not pin at random, so paying
+# seven times for a tier 3 round would make the other four pointless. They are
+# the fourth root of the area ratio: a judgement, anchored on a measurement.
+TIER_WEIGHT = {"1": 1.0, "2": 1.4, "3": 1.6}
+
+
+def tier_weight(tier):
+    """Relative worth of a round at this tier. Unknown tiers get no bonus."""
+    return TIER_WEIGHT.get(str(tier), 1.0)
+
+
+def session_multipliers(tiers):
+    """Scale a session's tier weights so they average 1.
+
+    Tier weighting alone would make a tier 3 heavy day worth more than a tier 1
+    day, and for a daily game that breaks the one number players compare. Scaled
+    within the session, a hard round is worth more than the others *that day*
+    and every day still totals the same maximum.
+    """
+    raw = [tier_weight(t) for t in tiers]
+    total = sum(raw)
+    if total <= 0:
+        return [1.0] * len(raw)
+    return [value * len(raw) / total for value in raw]
+
+
 def haversine(lat1, lon1, lat2, lon2):
     """Great-circle distance in km. Wraps the antimeridian correctly."""
     p1, p2 = math.radians(lat1), math.radians(lat2)
@@ -115,9 +146,15 @@ def weight_at(grid, lat, lon):
     return 0.0
 
 
-def score(inside, weight, distance_km,
+def score(inside, weight, distance_km, multiplier=1.0,
           max_points=MAX_POINTS, floor=FLOOR, decay_km=DECAY_KM):
-    """Points for one pin."""
+    """Points for one pin.
+
+    `multiplier` is the round's worth relative to the others in its session,
+    from session_multipliers(). At 1.0 this is the unweighted score.
+    """
     if inside:
-        return max_points * (floor + (1.0 - floor) * max(0.0, min(1.0, weight)))
-    return max_points * floor * math.exp(-max(0.0, distance_km) / decay_km)
+        base = max_points * (floor + (1.0 - floor) * max(0.0, min(1.0, weight)))
+    else:
+        base = max_points * floor * math.exp(-max(0.0, distance_km) / decay_km)
+    return base * multiplier

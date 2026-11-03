@@ -82,3 +82,18 @@ Needs a hand-drawn footprint from French admin-1: Occitanie, Nouvelle-Aquitaine
 south of the Garonne, Provence-Alpes-Côte d'Azur, and the southern edge of
 Auvergne-Rhône-Alpes. Weights currently read FR 97 / IT 3, which is the right
 share applied to the wrong shape.
+
+## Khmer does not cover eastern Cambodia
+
+Measured 2026-11-03: the footprint covers **70.5% of Cambodia**, and 79% of what
+is missing lies east of 105.5°E. Meanwhile 23.4% of the footprint is outside
+Cambodia, in Isan and the Mekong Delta.
+
+This is the atlas convention again, not a bug. Asher draws nine other languages
+in eastern Cambodia: Brao, Central and Southern Mnong, Tampuan, Kuy, Chrau,
+Eastern Cham, Jehai and Kaco'. Khmer's polygon stops where another vernacular
+community begins, even though Khmer is the national language spoken throughout.
+
+Same shape as Portuguese having no Angola. A gridded or official-language source
+fixes it; clipping to Glottolog's country list would remove the Thai lobe but
+would not add eastern Cambodia back.
