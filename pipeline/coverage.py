@@ -35,14 +35,18 @@ OUT_FIELDS = [
     "n_sources",
     "sources",
     "country_shape_only",
+    "inherited_point",
     "fallback_countries",
 ]
 
 
-def classify(code, parent, children, index):
+def classify(code, parent, children, index, kind="language"):
     """Return (coverage, sources) for one Glottocode.
 
     index maps a Glottocode to the list of "dataset/layer" names that draw it.
+    kind is "language" or "accent", and an accent is never allowed to fall back
+    to its base language's area, because the two differing is the whole reason
+    the accent is a separate entry.
     """
     hits = index.get(code, [])
     if hits:
@@ -55,7 +59,7 @@ def classify(code, parent, children, index):
         # A union of the dialects is tighter than whatever sits above them, and
         # what sits above is often a whole family.
         return "via_dialects", "; ".join(child_hits)
-    parent_hits = index.get(parent, []) if parent else []
+    parent_hits = index.get(parent, []) if parent and kind != "accent" else []
     if parent_hits:
         return "via_parent", "; ".join(f"{src} [{parent}]" for src in parent_hits)
     return "none", ""
@@ -70,6 +74,18 @@ def is_country_shape_only(srcs, country_shape):
     """
     labels = [s.split(" [")[0] for s in srcs.split("; ") if s]
     return bool(labels) and all(label in country_shape for label in labels)
+
+
+def has_inherited_coordinate(lat, lon, parent_lat, parent_lon):
+    """True when an entry's point is just its parent's rather than its own.
+
+    Glottolog gives a dialect node its parent language's coordinate when it has
+    no separate one. That is harmless as classification and poison as a fallback
+    centre, since it silently relocates every English accent to Derbyshire.
+    """
+    if not (lat and lon and parent_lat and parent_lon):
+        return False
+    return (lat, lon) == (parent_lat, parent_lon)
 
 
 def build_area_index(registry, cache_dir, refresh=False):
@@ -134,7 +150,9 @@ def main():
         glottocodes.CLDF_URL, table_path, min_bytes=500_000, refresh=args.refresh,
         label="Glottolog CLDF language table",
     )
-    parent_of, children_of = build_tree(sources.load_csv(table_path))
+    table = sources.load_csv(table_path)
+    parent_of, children_of = build_tree(table)
+    points = {r["Glottocode"]: (r["Latitude"], r["Longitude"]) for r in table}
 
     entries = sources.load_csv(args.resolved, delimiter="\t")
     out_rows = []
@@ -145,7 +163,8 @@ def main():
             status, srcs = "none", f"not resolved ({entry.get('status', '')})"
         else:
             status, srcs = classify(
-                code, parent_of.get(code, ""), children_of.get(code, ()), index
+                code, parent_of.get(code, ""), children_of.get(code, ()), index,
+                kind=entry.get("kind") or "language",
             )
         counts[status] += 1
         out_rows.append({
@@ -158,6 +177,10 @@ def main():
             "coverage": status,
             "n_sources": len(srcs.split("; ")) if srcs and status != "none" else 0,
             "sources": srcs,
+            "inherited_point": "yes" if has_inherited_coordinate(
+                entry.get("latitude", ""), entry.get("longitude", ""),
+                *points.get(parent_of.get(code, ""), ("", "")),
+            ) else "no",
             "country_shape_only": "yes" if is_country_shape_only(srcs, country_shape) else "no",
             "fallback_countries": entry.get("countries", ""),
         })
@@ -175,6 +198,14 @@ def main():
 
     summary = ", ".join(f"{counts[c]} {c}" for c in COVERAGE)
     sys.stderr.write(f"\n{len(out_rows)} entries: {summary}\n")
+    inherited = [r for r in out_rows if r["inherited_point"] == "yes"]
+    if inherited:
+        sys.stderr.write(
+            f"{len(inherited)} entries carry their parent's coordinate, not their own. "
+            "Unusable as a fallback centre:\n"
+        )
+        for rec in inherited:
+            sys.stderr.write(f"  {rec['input_name']} [{rec['glottocode']}]\n")
     borders = [r for r in out_rows if r["country_shape_only"] == "yes"]
     if borders:
         names = ", ".join(r["input_name"] for r in borders)

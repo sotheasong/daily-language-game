@@ -9,6 +9,7 @@ is stan1288 tests upstream's dataset, not this code.
 """
 
 import contextlib
+import csv
 import io
 import os
 import sys
@@ -124,6 +125,45 @@ class UpstreamDrift(unittest.TestCase):
         self.assertEqual(records[0]["status"], "ok")
 
 
+class LocalIdentifiers(unittest.TestCase):
+    """Some entries have no Glottolog node and still belong in the pool.
+
+    Scottish English is the first. Glottolog models Scots as its own language and
+    Ulster English as a dialect of English, but has no node for Scottish Standard
+    English at all. Naming the entry Scots to borrow a Glottocode would file
+    Glaswegian-accented English as a different language, which is exactly the kind
+    of quiet wrongness the resolver exists to prevent. So the entry carries a
+    recorded local identifier and a hand-drawn footprint instead.
+    """
+
+    def test_an_entry_with_no_glottolog_node_takes_its_recorded_local_id(self):
+        records = [{
+            "input_name": "Scottish English", "status": "unresolved",
+            "glottocode": "", "matched_name": "", "candidates": "Scots [scot1243]",
+        }]
+        local = {"Scottish English": {
+            "local_id": "stan1293-scotland",
+            "reason": "Glottolog has no Scottish English node, only Scots",
+        }}
+        glottocodes.apply_local_ids(records, local)
+        self.assertEqual(records[0]["status"], "local")
+        self.assertEqual(records[0]["glottocode"], "stan1293-scotland")
+        self.assertIn("no Scottish English node", records[0]["candidates"])
+
+    def test_a_local_id_never_shadows_a_real_glottolog_match(self):
+        # Guard. If Glottolog later adds the node, the real code has to win, or a
+        # stale local row would quietly keep a hand-drawn footprint in play.
+        records = [{
+            "input_name": "Irish English", "status": "ok", "glottocode": "iris1255",
+            "matched_name": "Irish English", "candidates": "",
+        }]
+        glottocodes.apply_local_ids(
+            records, {"Irish English": {"local_id": "stan1293-ireland", "reason": "x"}}
+        )
+        self.assertEqual(records[0]["status"], "ok")
+        self.assertEqual(records[0]["glottocode"], "iris1255")
+
+
 class ExitCodeGate(unittest.TestCase):
     """main() must exit non-zero if and only if something needs a human.
 
@@ -131,7 +171,8 @@ class ExitCodeGate(unittest.TestCase):
     entry list through unnoticed.
     """
 
-    def run_cli(self, table_rows, entry_names, lock_rows=None):
+    def run_cli(self, table_rows, entry_names, lock_rows=None, want_rows=False,
+                local_rows=None):
         with tempfile.TemporaryDirectory() as tmp:
             cache = os.path.join(tmp, "languages.csv")
             with open(cache, "w", encoding="utf-8") as fh:
@@ -158,11 +199,22 @@ class ExitCodeGate(unittest.TestCase):
                     for row in lock_rows:
                         fh.write("\t".join(row) + "\n")
                 argv += ["--lock", lock]
+            if local_rows is not None:
+                local = os.path.join(tmp, "local.tsv")
+                with open(local, "w", encoding="utf-8") as fh:
+                    fh.write("input_name\tlocal_id\treason\n")
+                    for row in local_rows:
+                        fh.write("\t".join(row) + "\n")
+                argv += ["--local-ids", local]
             old_argv = sys.argv
             sys.argv = argv
             try:
                 with contextlib.redirect_stderr(io.StringIO()) as err:
                     code = glottocodes.main()
+                if want_rows:
+                    with open(out, newline="", encoding="utf-8") as fh:
+                        rows = list(csv.DictReader(fh, delimiter="\t"))
+                    return code, err.getvalue(), rows
                 return code, err.getvalue()
             finally:
                 sys.argv = old_argv
@@ -177,6 +229,35 @@ class ExitCodeGate(unittest.TestCase):
         code, err = self.run_cli([("Kabyle", "kaby1243")], ["Mandarin"])
         self.assertNotEqual(code, 0)
         self.assertIn("Mandarin", err)
+
+    def test_an_accent_row_is_carried_through_to_the_output(self):
+        # The entry file gained a third column when the accent layer landed.
+        # Accents and languages resolve identically, but the scheduler has to tell
+        # them apart, and Indian English must not be filed as a language.
+        code, _, rows = self.run_cli(
+            [("Indian English", "indi1255")], ["Indian English\t1\taccent"], want_rows=True
+        )
+        self.assertEqual(code, 0)
+        self.assertEqual(rows[0]["kind"], "accent")
+        self.assertEqual(rows[0]["glottocode"], "indi1255")
+
+    def test_a_row_with_no_kind_column_is_still_a_language(self):
+        code, _, rows = self.run_cli(
+            [("Kabyle", "kaby1243")], ["Kabyle\t3"], want_rows=True
+        )
+        self.assertEqual(rows[0]["kind"], "language")
+
+    def test_a_recorded_local_id_does_not_hold_the_build_shut(self):
+        # Scottish English will never resolve against Glottolog. The gate is for
+        # things no human has looked at, and a local-ids row with a written reason
+        # is a human having looked at it.
+        code, err = self.run_cli(
+            [("Kabyle", "kaby1243")], ["Scottish English\t1\taccent"],
+            local_rows=[("Scottish English", "stan1293-scotland",
+                         "Glottolog has no Scottish English node, only Scots")],
+        )
+        self.assertEqual(code, 0)
+        self.assertIn("1 local", err)
 
     def test_exits_non_zero_when_an_approved_glottocode_drifts(self):
         # The table now hands Kabyle a different code than the lock approved.

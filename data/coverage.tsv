@@ -1,0 +1,137 @@
+input_name	tier	glottocode	matched_name	level	macroarea	coverage	n_sources	sources	country_shape_only	inherited_point	fallback_countries
+French	1	stan1290	French	language	Eurasia	direct	6	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; dedio2019britain; wikipedia2024officiallang	no	no	AD;BE;CA;CH;FR;GF;IT;LU;MC;PM;TF;US
+Spanish	1	stan1288	Spanish	language	Eurasia	direct	6	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; vuillermet2012grammar; wikipedia2024officiallang	no	no	AD;AR;BO;BR;BZ;CL;CO;CR;CU;DO;EC;ES;FR;GI;GT;GY;HN;HT;MA;MX;NI;PA;PE;PR;PT;PY;SV;US;UY;VE
+Italian	1	ital1282	Italian	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	AT;CH;FR;HR;IT;SI;SM;VA
+German	1	stan1295	German	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; dedio2019britain; wikipedia2024officiallang	no	no	AT;BE;CH;CZ;DE;DK;FR;HU;IT;LI;LU;NL;PL;RO;SI;SK
+Portuguese	1	port1283	Portuguese	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	AD;AR;BO;BR;CO;ES;FR;GF;GY;PE;PT;PY;SR;UY;VE
+Russian	1	russ1263	Russian	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	BY;CN;EE;FI;GE;KG;KP;KZ;LT;LV;MD;MN;NO;PL;RO;RU;SJ;TM;UA;UZ
+Mandarin	1	mand1415	Mandarin Chinese	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	CN;KP;LA;MM;MN;RU;TW;VN
+Cantonese	1	yuec1235	Yue Chinese	language	Eurasia	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	CN;VN
+Japanese	1	nucl1643	Japanese	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; matsumae2021exploring; wikipedia2024officiallang	no	no	JP
+Korean	1	kore1280	Korean	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; matsumae2021exploring; wikipedia2024officiallang	no	no	CN;KP;KR;RU
+Arabic	1	stan1318	Standard Arabic	language	Eurasia	direct	1	wikipedia2024officiallang	yes	no	AE;BH;DJ;DZ;EG;ER;IL;IQ;JO;KM;KW;LB;LY;MA;OM;PS;QA;SA;SD;SO;SY;TD;TN;TZ;YE
+Hindi	1	hind1269	Hindi	language	Eurasia	direct	6	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; grierson1903lsi; wikipedia2024officiallang	no	no	BD;BT;IN;NP
+Dutch	1	dutc1256	Dutch	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; dedio2019britain; wikipedia2024officiallang	no	no	AW;BE;BQ;BR;CW;DE;GF;GY;NL;SR;SX
+Greek	1	mode1248	Modern Greek	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	AL;BG;CY;EG;GR;IT;MK;RO;TR;UA
+Hebrew	1	hebr1245	Modern Hebrew	language	Eurasia	direct	3	asher2007world/contemporary; asher2007world/traditional; wikipedia2024officiallang	no	no	IL;JO;LB;PS;SY
+Turkish	1	nucl1301	Turkish	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	AL;AM;AZ;BG;CY;GE;GR;IQ;IR;MK;SY;TR
+Polish	1	poli1260	Polish	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	BY;CZ;DE;LT;PL;RU;SK;UA
+Swedish	1	swed1254	Swedish	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	AX;DK;FI;NO;SE
+Vietnamese	1	viet1252	Vietnamese	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; wikipedia2024officiallang; wurm1981pacific	no	no	CN;LA;VN
+Thai	1	thai1261	Thai	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; wikipedia2024officiallang; wurm1981pacific	no	no	KH;MM;TH
+Swahili	1	swah1253	Swahili	language	Africa	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	BI;KE;MZ;RW;SO;TZ;UG
+Ukrainian	2	ukra1253	Ukrainian	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	BY;HU;MD;PL;RO;RU;SK;UA
+Czech	2	czec1258	Czech	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	AT;CZ;PL;SK
+Slovak	2	slov1269	Slovak	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	AT;CZ;HU;PL;RS;SK;UA
+Romanian	2	roma1327	Romanian	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	BG;HU;MD;RO;RS;UA
+Bulgarian	2	bulg1262	Bulgarian	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	BG;GR;MD;MK;RO;RS;TR;UA
+Serbian	2	serb1264	Serbian Standard	dialect	Eurasia	direct	2	carling2025diacl; wikipedia2024officiallang	no	no	AL;BA;BG;HR;HU;ME;MK;RO;RS
+Croatian	2	croa1245	Croatian Standard	dialect	Eurasia	direct	2	carling2025diacl; wikipedia2024officiallang	no	no	AT;BA;HR;HU;IT;ME;RS;SI
+Slovenian	2	slov1268	Slovenian	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	AT;HR;HU;IT;SI
+Macedonian	2	mace1250	Macedonian	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; wikipedia2024officiallang	no	no	AL;BG;GR;MK;RS
+Belarusian	2	bela1254	Belarusian	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; wikipedia2024officiallang	no	no	BY;LT;LV;PL;RU;UA
+Lithuanian	2	lith1251	Lithuanian	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	BY;LT;LV;PL;RU
+Latvian	2	latv1249	Latvian	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	BY;EE;LT;LV;RU
+Estonian	2	esto1258	Estonian	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; rantanen2021uralic; wikipedia2024officiallang	no	no	EE;LV;RU
+Finnish	2	finn1318	Finnish	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; rantanen2021uralic; wikipedia2024officiallang	no	no	EE;FI;NO;RU;SE
+Hungarian	2	hung1274	Hungarian	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	AT;HR;HU;RO;RS;SI;SK;UA
+Norwegian	2	norw1258	Norwegian	language	Eurasia	direct	6	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; dedio2019britain; wikipedia2024officiallang	no	no	FI;NO;RU;SE;SJ
+Danish	2	dani1285	Danish	language	Eurasia	direct	6	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; dedio2019britain; wikipedia2024officiallang	no	no	DE;DK;FO;GL
+Icelandic	2	icel1247	Icelandic	language	Eurasia	direct	6	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; dedio2019britain; wikipedia2024officiallang	no	no	IS
+Catalan	2	stan1289	Catalan	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	AD;ES;FR;IT
+Galician	2	gali1258	Galician	language	Eurasia	none	0		no	no	ES;PT
+Basque	2	basq1248	Basque	language	Eurasia	direct	2	asher2007world/contemporary; asher2007world/traditional	no	no	ES;FR
+Welsh	2	wels1247	Welsh	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; dedio2019britain	no	no	AR;GB
+Irish	2	iris1253	Irish	language	Eurasia	direct	6	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; dedio2019britain; wikipedia2024officiallang	no	no	GB;IE
+Scottish Gaelic	2	scot1245	Scottish Gaelic	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; dedio2019britain	no	no	GB
+Albanian	2	tosk1239	Northern Tosk Albanian	language	Eurasia	direct	1	carling2025diacl	no	no	AL;GR;MK
+Maltese	2	malt1254	Maltese	language	Eurasia	direct	3	asher2007world/contemporary; asher2007world/traditional; wikipedia2024officiallang	no	no	MT
+Yiddish	2	east2295	Eastern Yiddish	language	Eurasia	direct	1	carling2025diacl	no	no	AR;AU;BE;BY;CA;CR;EE;HU;IL;LT;LV;MD;PA;PL;PR;RO;RU;SE;UA;US;UY;ZA
+Afrikaans	2	afri1274	Afrikaans	language	Africa	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	BW;MZ;NA;ZA;ZM;ZW
+Amharic	2	amha1245	Amharic	language	Africa	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	DJ;ET
+Somali	2	soma1255	Somali	language	Africa	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	DJ;ET;KE;SO
+Yoruba	2	yoru1245	Yoruba	language	Africa	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	BJ;NG
+Igbo	2	nucl1417	Igbo	language	Africa	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	NG
+Hausa	2	haus1257	Hausa	language	Africa	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	BF;BJ;CM;NE;NG;TD
+Zulu	2	zulu1248	Zulu	language	Africa	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	BW;LS;MZ;SZ;ZA
+Persian	2	west2369	Western Farsi	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	AF;AZ;IQ;IR;TM;TR
+Pashto	2	nort2646	Northern Pashto	language	Eurasia	direct	1	grierson1903lsi	no	no	AF;IN;PK
+Georgian	2	nucl1302	Georgian	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	AM;AZ;GE;IR;RU;TR
+Armenian	2	nucl1235	Eastern Armenian	language	Eurasia	direct	3	bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	AM;AZ;GE;IR;SY;TR
+Mongolian	2	halh1238	Halh Mongolian	language	Eurasia	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	MN;RU
+Urdu	2	urdu1245	Urdu	language	Eurasia	direct	3	asher2007world/contemporary; asher2007world/traditional; wikipedia2024officiallang	no	no	AF;BD;IN;PK
+Bengali	2	beng1280	Bengali	language	Eurasia	direct	6	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; grierson1903lsi; wikipedia2024officiallang	no	no	BD;IN;NP
+Punjabi	2	panj1256	Eastern Panjabi	language	Eurasia	direct	2	carling2025diacl; grierson1903lsi	no	no	BD;IN;PK
+Tamil	2	tami1289	Tamil	language	Eurasia	direct	6	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; grierson1903lsi; steever2019dravidian; wikipedia2024officiallang	no	no	IN;LK
+Telugu	2	telu1262	Telugu	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; grierson1903lsi; steever2019dravidian	no	no	IN
+Marathi	2	mara1378	Marathi	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; grierson1903lsi	no	no	IN
+Gujarati	2	guja1252	Gujarati	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; grierson1903lsi	no	no	BD;IN;PK
+Malayalam	2	mala1464	Malayalam	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; grierson1903lsi; steever2019dravidian	no	no	IN
+Kannada	2	nucl1305	Kannada	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; grierson1903lsi; steever2019dravidian	no	no	IN
+Nepali	2	nepa1254	Nepali	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	NP
+Sinhala	2	sinh1246	Sinhala	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	LK
+Burmese	2	nucl1310	Burmese	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; grierson1903lsi; wikipedia2024officiallang	no	no	BD;MM;TH
+Khmer	2	cent1989	Central Khmer	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; wikipedia2024officiallang; wurm1981pacific	no	no	KH;LA;TH;VN
+Lao	2	laoo1244	Lao	language	Eurasia	direct	3	asher2007world/contemporary; asher2007world/traditional; wikipedia2024officiallang	no	no	KH;LA;TH
+Tagalog	2	taga1270	Tagalog	language	Papunesia	direct	3	asher2007world/contemporary; asher2007world/traditional; wurm1981pacific	no	no	PH
+Indonesian	2	indo1316	Standard Indonesian	language	Papunesia	direct	1	wikipedia2024officiallang	yes	no	ID;NL;PH;SA;SG;US
+Malay	2	stan1306	Standard Malay	language	Eurasia	direct	1	wurm1981pacific	no	no	BN;MY;SG
+Javanese	2	java1254	Javanese	language	Papunesia	direct	3	asher2007world/contemporary; asher2007world/traditional; wurm1981pacific	no	no	ID;MY
+Azerbaijani	3	nort2697	North Azerbaijani	language	Eurasia	direct	1	carling2025diacl	no	no	AM;AZ;GE;IR;RU;TR
+Kazakh	3	kaza1248	Kazakh	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	AF;CN;IR;KG;KZ;MN;RU;TJ;TM;UZ
+Uzbek	3	nort2690	Northern Uzbek	language	Eurasia	direct	2	asher2007world/contemporary; asher2007world/traditional	no	no	AF;CN;KG;KZ;TJ;TM;UZ
+Kyrgyz	3	kirg1245	Kirghiz	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	AF;CN;KG;KZ;TJ;UZ
+Turkmen	3	turk1304	Turkmen	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	AF;IQ;IR;PK;TJ;TM;TR;UZ
+Tatar	3	tata1255	Tatar	language	Eurasia	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	AZ;BY;CN;EE;FI;GE;KZ;LT;LV;RU;UA
+Bashkir	3	bash1264	Bashkir	language	Eurasia	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	KZ;RU;UA
+Chuvash	3	chuv1255	Chuvash	language	Eurasia	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	EE;KZ;RU
+Sakha	3	yaku1245	Sakha	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; matsumae2021exploring	no	no	RU
+Uyghur	3	uigh1240	Uighur	language	Eurasia	direct	2	asher2007world/contemporary; asher2007world/traditional	no	no	CN;IN;KG;KZ;MN;PK;UZ
+Chechen	3	chec1245	Chechen	language	Eurasia	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	GE;KZ;RU
+Ossetian	3	iron1242	Iron Ossetian	language	Eurasia	direct	1	carling2025diacl	no	no	RU
+Abkhaz	3	abkh1244	Abkhaz	language	Eurasia	direct	2	asher2007world/contemporary; asher2007world/traditional	no	no	GE;RU;TR
+Tajik	3	taji1245	Tajik	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	AF;CN;KG;TJ;UZ
+Erzya	3	erzy1239	Erzya	language	Eurasia	direct	2	carling2025diacl; rantanen2021uralic	no	no	AZ;BY;EE;KZ;LT;LV;RU;UA
+Komi	3	komi1268	Komi-Zyrian	language	Eurasia	direct	3	asher2007world/contemporary; asher2007world/traditional; rantanen2021uralic	no	no	RU
+Udmurt	3	udmu1245	Udmurt	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; rantanen2021uralic	no	no	KZ;RU
+Meadow Mari	3	east2328	Eastern Mari	language	Eurasia	direct	1	rantanen2021uralic	no	no	KZ;RU
+Northern Sami	3	nort2671	North Saami	language	Eurasia	direct	2	carling2025diacl; rantanen2021uralic	no	no	FI;NO;RU;SE
+Faroese	3	faro1244	Faroese	language	Eurasia	direct	6	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; dedio2019britain; wikipedia2024officiallang	no	no	DK;FO
+West Frisian	3	west2354	Western Frisian	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl	no	no	NL
+Luxembourgish	3	luxe1241	Moselle Franconian	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; wikipedia2024officiallang	no	no	BE;DE;FR;LU
+Occitan	3	occi1239	Occitan	language	Eurasia	direct	4	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl	no	no	AD;ES;FR;IT;MC
+Sardinian	3	logu1236	Logudorese Sardinian	language	Eurasia	direct	1	carling2025diacl	no	no	IT
+Asturian	3	astu1246	Asturian	dialect	Eurasia	none	0		no	yes	
+Aragonese	3	arag1245	Aragonese	language	Eurasia	none	0		no	no	ES;FR
+Breton	3	bret1244	Breton	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; dedio2019britain	no	no	FR
+Romansh	3	roma1326	Romansh	language	Eurasia	direct	5	asher2007world/contemporary; asher2007world/traditional; bouckaert2012indoeuropean; carling2025diacl; wikipedia2024officiallang	no	no	AT;CH;IT
+Kabyle	3	kaby1243	Kabyle	language	Africa	direct	2	asher2007world/contemporary; asher2007world/traditional	no	no	DZ
+Wolof	3	nucl1347	Wolof	language	Africa	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	GM;GW;ML;MR;SN
+Twi	3	akan1250	Akan	language	Africa	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	GH;TG
+Bambara	3	bamb1269	Bambara	language	Africa	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	CI;GN;ML;SN
+Oromo	3	west2721	West Central Oromo	language	Africa	direct	2	asher2007world/contemporary; asher2007world/traditional	no	no	ET;SD
+Tigrinya	3	tigr1271	Tigrinya	language	Africa	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	DJ;ER;ET;SD
+Luganda	3	gand1255	Ganda	language	Africa	direct	3	asher2007world/contemporary; asher2007world/traditional; carling2025diacl	no	no	UG
+Kinyarwanda	3	kiny1244	Kinyarwanda	language	Africa	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	BI;CD;RW;TZ;UG
+Shona	3	shon1251	Shona	language	Africa	direct	4	asher2007world/contemporary; asher2007world/traditional; carling2025diacl; wikipedia2024officiallang	no	no	BW;ZA;ZM;ZW
+Xhosa	3	xhos1239	Xhosa	language	Africa	direct	3	asher2007world/contemporary; asher2007world/traditional; wikipedia2024officiallang	no	no	BW;LS;ZA
+Cebuano	3	cebu1242	Cebuano	language	Papunesia	direct	3	asher2007world/contemporary; asher2007world/traditional; wurm1981pacific	no	no	PH
+Sundanese	3	sund1252	Sundanese	language	Papunesia	direct	3	asher2007world/contemporary; asher2007world/traditional; wurm1981pacific	no	no	ID
+Quechua	3	cusc1236	Cusco Quechua	language	South America	direct	1	carling2025diacl	no	no	PE
+Southeastern English	1	sout3285	Southeastern English	dialect	Eurasia	none	0		no	yes	
+Irish English	1	iris1255	Irish English	dialect	Eurasia	direct	1	dedio2019britain	no	yes	
+Scottish English	1	stan1293-scotland				none	0		no	no	
+Indian English	1	indi1255	Indian English	dialect	Eurasia	none	0		no	yes	
+Jamaican English	1	jama1265	Jamaican English	dialect	Eurasia	none	0		no	yes	
+Australian English	1	aust1314	Australian English	dialect	Eurasia	none	0		no	yes	
+Nigerian English	2	nige1260	Nigerian English	dialect	Eurasia	none	0		no	yes	
+Southern African English	2	sout3331	Southern African English	dialect	Africa;Eurasia	none	0		no	yes	
+Philippine English	2	phil1246	Philippine English	dialect	Eurasia	none	0		no	yes	
+Singlish	2	sing1272	Singlish	dialect	Eurasia	none	0		no	yes	
+New Zealand English	2	newz1240	New Zealand English	dialect	Eurasia	none	0		no	yes	
+Welsh English	2	wels1248	Welsh English	dialect	Eurasia	none	0		no	yes	
+Kenyan English	3	keny1281	Kenyan English	dialect	Eurasia	none	0		no	yes	
+Ghanaian English	3	ghan1247	Ghanaian English	dialect	Eurasia	none	0		no	yes	
+Hong Kong English	3	hong1245	Hong Kong English	dialect	Eurasia	none	0		no	no	HK
+Malaysian English	3	mala1551	Malaysian English	dialect	Eurasia	none	0		no	yes	
+North American English	3	nort3314	North American English	dialect	Eurasia	none	0		no	yes	

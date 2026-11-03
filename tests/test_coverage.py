@@ -57,6 +57,28 @@ class Classify(unittest.TestCase):
         self.assertIn("sout2222", srcs)
         self.assertNotIn("indo1319", srcs, "never widen to the parent when dialects exist")
 
+    def test_an_accent_never_inherits_its_base_language_area(self):
+        # 15 of the 16 accent entries resolve to dialect nodes of English, and
+        # Glottography draws an area for English itself. Inheriting it would score
+        # a London pin as perfect for Jamaican English. An accent exists precisely
+        # because its footprint is not the base language's, so the parent fallback
+        # is not coverage here, it is a wrong answer wearing a right one's clothes.
+        index = {"stan1293": ["asher2007world/contemporary"]}
+        status, srcs = coverage.classify(
+            "jama1265", parent="stan1293", children=(), index=index, kind="accent"
+        )
+        self.assertEqual(status, "none")
+        self.assertEqual(srcs, "")
+
+    def test_an_accent_with_its_own_drawn_area_still_counts(self):
+        # Irish English is drawn directly by the Britain and Ireland atlas.
+        index = {"iris1255": ["dedio2019britain"], "stan1293": ["asher2007world/contemporary"]}
+        status, srcs = coverage.classify(
+            "iris1255", parent="stan1293", children=(), index=index, kind="accent"
+        )
+        self.assertEqual(status, "direct")
+        self.assertIn("dedio2019britain", srcs)
+
 
 class FootprintQuality(unittest.TestCase):
     """A footprint made only of country outlines is not a speech area.
@@ -81,6 +103,29 @@ class FootprintQuality(unittest.TestCase):
         # via_parent and via_dialects append the code the area was borrowed from.
         self.assertTrue(coverage.is_country_shape_only(
             "wikipedia2024officiallang [sout1528]", self.COARSE))
+
+
+class InheritedCoordinates(unittest.TestCase):
+    """A dialect node usually carries its parent's point, not one of its own.
+
+    Glottolog gives all 114 English dialect nodes English's own coordinate,
+    53.0 / -1.0, which is in Derbyshire. Jamaican English's fallback centre is
+    therefore the English Midlands, wrong by about 7,500 km while looking like
+    perfectly ordinary data. The resolved record carries these as fallback
+    coordinates, so they have to be flagged before something scores against one.
+    """
+
+    def test_a_point_identical_to_the_parents_is_flagged_as_inherited(self):
+        self.assertTrue(
+            coverage.has_inherited_coordinate("53.0", "-1.0", "53.0", "-1.0"))
+
+    def test_an_entry_placed_on_its_own_is_not_flagged(self):
+        # Hong Kong English is the one English dialect Glottolog places itself.
+        self.assertFalse(
+            coverage.has_inherited_coordinate("22.30173", "114.17452", "53.0", "-1.0"))
+
+    def test_an_entry_with_no_parent_point_is_not_flagged(self):
+        self.assertFalse(coverage.has_inherited_coordinate("40.0", "-3.0", "", ""))
 
 
 class ExitCodeGate(unittest.TestCase):

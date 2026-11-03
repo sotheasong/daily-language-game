@@ -2,4 +2,11 @@
 __pycache__/
 *.pyc
 .DS_Store
-data/
+reviews/
+
+# Generated, and large. Rebuild with: python3 -m pipeline.footprints data/resolved.tsv
+data/footprints.geojson
+
+# Everything else under data/ is versioned on purpose. entries.tsv, local-ids.tsv,
+# footprints.tsv and sources/*.tsv are hand-authored decisions, and
+# glottocodes.lock.tsv is the approval record. An uncommitted lock protects nothing.

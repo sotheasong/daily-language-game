@@ -86,15 +86,21 @@ ALIASES = {
     "asturian": "Asturian",
 }
 
-# Any status other than "ok" means a human has to look. Keep this list and the
-# statuses returned by resolve() in step, or the exit-code gate goes quiet.
-STATUSES = ("ok", "ambiguous", "alias_broken", "unresolved", "drifted")
+# Keep this list and the statuses returned by resolve() in step, or the exit-code
+# gate goes quiet. Anything outside APPROVED means a human has to look.
+STATUSES = ("ok", "local", "ambiguous", "alias_broken", "unresolved", "drifted")
+
+# "local" is approved by the act of writing the row and its reason into
+# data/local-ids.tsv. It will never resolve, so gating on it would mean a build
+# that can never go green.
+APPROVED = ("ok", "local")
 
 LOCK_FIELDS = ["input_name", "glottocode", "matched_name"]
 
 OUT_FIELDS = [
     "input_name",
     "tier",
+    "kind",
     "status",
     "glottocode",
     "matched_name",
@@ -130,6 +136,13 @@ def build_index(rows, levels):
 
 
 def read_entries(path):
+    """Read "Name", "Name<TAB>tier" or "Name<TAB>tier<TAB>kind".
+
+    kind is "language" or "accent". They resolve identically, since Glottolog
+    models most English accents as dialect nodes with their own Glottocodes, but
+    the scheduler has to tell them apart to keep an accent and its base language
+    out of the same session.
+    """
     entries = []
     with open(path, encoding="utf-8") as fh:
         for raw in fh:
@@ -139,8 +152,18 @@ def read_entries(path):
             parts = line.split("\t")
             name = parts[0].strip()
             tier = parts[1].strip() if len(parts) > 1 else ""
-            entries.append((name, tier))
+            kind = parts[2].strip() if len(parts) > 2 and parts[2].strip() else "language"
+            entries.append((name, tier, kind))
     return entries
+
+
+def read_local_ids(path):
+    """Read data/local-ids.tsv as input_name -> {local_id, reason}."""
+    out = {}
+    with open(path, newline="", encoding="utf-8") as fh:
+        for row in csv.DictReader(fh, delimiter="\t"):
+            out[row["input_name"]] = row
+    return out
 
 
 def read_lock(path):
@@ -206,6 +229,28 @@ def resolve(name, index, names_list, cutoff, aliases=None):
     return "unresolved", None, "; ".join(cands)
 
 
+def apply_local_ids(records, local_ids):
+    """Give entries Glottolog does not model their recorded local identifier.
+
+    Glottolog is the join key for everything, and it has no node for a handful of
+    varieties the pool wants. Scottish English is the first. Those entries get an
+    id of the form "<base glottocode>-<place>", written down with a reason in
+    data/local-ids.tsv, and a footprint drawn by hand.
+
+    A real Glottolog match always wins, so a row left here after Glottolog adds
+    the node stops being used rather than quietly holding a stale footprint.
+    """
+    for rec in records:
+        if rec["status"] == "ok":
+            continue
+        entry = local_ids.get(rec["input_name"])
+        if entry:
+            rec["status"] = "local"
+            rec["glottocode"] = entry["local_id"]
+            rec["candidates"] = entry["reason"]
+    return records
+
+
 def apply_lock(records, lock):
     """Flag approved entries whose Glottocode has moved upstream.
 
@@ -238,6 +283,10 @@ def main():
         help="comma-separated Glottolog levels to match against (language,dialect,family)",
     )
     ap.add_argument("--cutoff", type=float, default=0.75, help="fuzzy match cutoff, 0-1")
+    ap.add_argument(
+        "--local-ids",
+        help="TSV of entries Glottolog does not model, with an id and a written reason",
+    )
     ap.add_argument("--lock", help="approved input_name/glottocode TSV; drift from it needs a human")
     ap.add_argument(
         "--write-lock",
@@ -253,10 +302,13 @@ def main():
     entries = read_entries(args.entries)
 
     out_rows = []
-    for name, tier in entries:
+    for name, tier, kind in entries:
         status, row, cands = resolve(name, index, names_list, args.cutoff)
         rec = {f: "" for f in OUT_FIELDS}
-        rec.update({"input_name": name, "tier": tier, "status": status, "candidates": cands})
+        rec.update({
+            "input_name": name, "tier": tier, "kind": kind,
+            "status": status, "candidates": cands,
+        })
         if row is not None:
             rec.update(
                 {
@@ -273,6 +325,9 @@ def main():
                 }
             )
         out_rows.append(rec)
+
+    if args.local_ids and os.path.exists(args.local_ids):
+        apply_local_ids(out_rows, read_local_ids(args.local_ids))
 
     if args.write_lock:
         if not args.lock:
@@ -297,7 +352,7 @@ def main():
             stream.close()
 
     total = len(entries)
-    needs_human = sum(n for status, n in counts.items() if status != "ok")
+    needs_human = sum(n for status, n in counts.items() if status not in APPROVED)
     summary = ", ".join(f"{counts[s]} {s}" for s in STATUSES)
     sys.stderr.write(f"\n{total} entries: {summary}\n")
     if needs_human:
