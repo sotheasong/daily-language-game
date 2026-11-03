@@ -129,6 +129,34 @@ URBAN_FLOOR = 0.6
 URBAN_CEILING = 2.5
 
 
+# A coastal city's cell can have its centre in the sea, so the rasteriser
+# leaves it out. Snapping to the nearest filled cell keeps its people instead of
+# discarding them.
+SNAP_RADIUS = 3
+
+
+def snap_to_filled(cell, filled):
+    """Nearest filled cell to `cell`, or None if there is none close by."""
+    if cell in filled:
+        return cell
+    ix, iy = cell
+    for radius in range(1, SNAP_RADIUS + 1):
+        best, best_d2 = None, None
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                if max(abs(dx), abs(dy)) != radius:
+                    continue
+                candidate = (ix + dx, iy + dy)
+                if candidate not in filled:
+                    continue
+                d2 = dx * dx + dy * dy
+                if best_d2 is None or d2 < best_d2:
+                    best, best_d2 = candidate, d2
+        if best is not None:
+            return best
+    return None
+
+
 def population_shares(cells):
     """Derive shares from population when no row was authored.
 
@@ -295,8 +323,9 @@ def build_entry(feature, grid, table, cities, share_map):
         if not (grid.lon0 <= lon < lon1 and grid.lat0 <= lat < lat1):
             continue
         cell = (int((lon - grid.lon0) / grid.cell), int((lat - grid.lat0) / grid.cell))
-        if cell in inside:
-            urban[cell] += pop
+        landed = snap_to_filled(cell, inside)
+        if landed is not None:
+            urban[landed] += pop
 
     populations = {}
     for cell in inside:

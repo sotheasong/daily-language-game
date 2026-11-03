@@ -34,6 +34,13 @@ straight to that raster, so coastlines are jaggy and small parts disappear.
 Render at 2–3× and downsample with Pillow's `LANCZOS`, and make panel size a
 flag rather than a constant.
 
+**The basemap borders are too coarse.** Both the preview and the reviewer draw
+`ne_50m_admin_0_countries`, and the reviewer simplifies it further to 0.25° to
+keep the page small. Country outlines therefore cut corners, which is most
+visible where a footprint is meant to follow a border. Use `ne_10m` for the
+preview, where file size does not matter, and a gentler simplification for the
+reviewer. This is the next thing to do after weights.
+
 **The reviewer caps device pixel ratio at 2.** Fine on a laptop, soft on a
 high-DPI display. The canvas also redraws on every selection with no caching.
 

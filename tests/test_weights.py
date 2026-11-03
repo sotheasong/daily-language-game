@@ -110,6 +110,25 @@ class SharesSetSpeakerDensity(unittest.TestCase):
         self.assertNotIn((1, 0), got)
 
 
+class CoastalCities(unittest.TestCase):
+    """A city whose cell centre falls offshore must not lose its people.
+
+    Kingston sits on Jamaica's south coast and the cell holding it has its
+    centre in the sea, so the rasteriser leaves that cell out. Dropping the city
+    with it discarded 1.2 million people and left Jamaica's capital weighted the
+    same as Montego Bay, which has a tenth of them.
+    """
+
+    def test_a_city_in_an_empty_cell_snaps_to_the_nearest_filled_one(self):
+        self.assertEqual(weights.snap_to_filled((5, 4), {(5, 5), (9, 9)}), (5, 5))
+
+    def test_a_city_already_on_land_stays_put(self):
+        self.assertEqual(weights.snap_to_filled((5, 5), {(5, 5), (5, 6)}), (5, 5))
+
+    def test_a_city_nowhere_near_the_footprint_is_dropped(self):
+        self.assertIsNone(weights.snap_to_filled((0, 0), {(50, 50)}))
+
+
 class PopulationShares(unittest.TestCase):
     def test_an_unauthored_entry_derives_its_shares_from_population(self):
         # German needs no authored row. Population alone already gives

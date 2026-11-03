@@ -1,0 +1,42 @@
+# Worked pin placements for tuning the scoring curve. Each row is somewhere a
+# real player might plausibly click, with the band it ought to land in.
+#
+# bullseye  the single best pin for this entry
+# core      well inside the main speaking area
+# fringe    inside, but a secondary area
+# near      just outside, a reasonable guess
+# region    right part of the world, wrong country
+# wrong     wrong continent
+#
+# The harness checks the bands come out in order. A violation is a finding about
+# the footprint or the weights, not about the player.
+entry	pin	lat	lon	band
+Khmer	Phnom Penh	11.56	104.92	bullseye
+Khmer	Siem Reap	13.36	103.86	core
+Khmer	Surin, Isan	14.88	103.49	fringe
+Khmer	Can Tho, Mekong Delta	10.03	105.78	fringe
+Khmer	Bangkok	13.75	100.52	near
+Khmer	Hanoi	21.03	105.85	region
+Khmer	Tokyo	35.68	139.69	wrong
+Spanish	Mexico City	19.43	-99.13	bullseye
+Spanish	Madrid	40.42	-3.70	core
+Spanish	Buenos Aires	-34.60	-58.38	core
+Spanish	Lima	-12.05	-77.04	core
+Spanish	Lisbon	38.72	-9.14	near
+Spanish	Rio de Janeiro	-22.91	-43.17	region
+Spanish	Cairo	30.04	31.24	wrong
+Kabyle	Tizi Ouzou	36.72	4.05	bullseye
+Kabyle	Bejaia	36.75	5.08	core
+Kabyle	Algiers	36.75	3.06	near
+Kabyle	Oran	35.70	-0.63	region
+Kabyle	Cairo	30.04	31.24	wrong
+Scottish English	Glasgow	55.86	-4.25	bullseye
+Scottish English	Inverness	57.48	-4.22	core
+Scottish English	Newcastle	54.98	-1.61	near
+Scottish English	London	51.51	-0.13	region
+Scottish English	New York	40.71	-74.01	wrong
+Jamaican English	Kingston	17.97	-76.79	bullseye
+Jamaican English	Montego Bay	18.47	-77.92	core
+Jamaican English	Havana	23.11	-82.37	near
+Jamaican English	Miami	25.76	-80.19	region
+Jamaican English	London	51.51	-0.13	wrong
