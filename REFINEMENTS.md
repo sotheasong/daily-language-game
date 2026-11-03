@@ -52,3 +52,16 @@ to do the same, or Anchorage reads as the far side of the planet.
 **Simplification is a single tolerance.** 0.01° for everything, so Spanish is
 719 KB while the median entry is 10 KB. A per-entry tolerance targeting a size
 budget would even that out, and only the reveal ships geometry anyway.
+
+## Occitan's footprint is a sliver
+
+Found 2026-11-03 while checking weights. Asher's polygon for `occi1239` spans
+lon 6.8–7.7, lat 44.1–46.0, which is the Occitan Valleys in Piedmont, not
+southern France. Glottolog gives Occitan 30 dialect nodes (Gascon, Provençal,
+Languedocian, Auvergnat, Limousin and the rest) and **none of them are drawn by
+any Glottography dataset**, so there is no better source to fall back to.
+
+Needs a hand-drawn footprint from French admin-1: Occitanie, Nouvelle-Aquitaine
+south of the Garonne, Provence-Alpes-Côte d'Azur, and the southern edge of
+Auvergne-Rhône-Alpes. Weights currently read FR 97 / IT 3, which is the right
+share applied to the wrong shape.
