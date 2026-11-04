@@ -174,11 +174,27 @@ SIGMA_EXPONENT = 0.22
 SIGMA_MIN_KM, SIGMA_MAX_KM = 5.0, 45.0
 KERNEL_REACH = 3.0      # standard deviations before the kernel is cut off
 
+# A kernel narrower than the grid cannot spread, so the city lands in one cell
+# and upscaling turns that square into a blur. Russia's cells are 25 km wide
+# against a 10 km catchment for a small town, which is 0.39 of a cell. Below
+# this many cells the kernel widens to the grid instead.
+MIN_SIGMA_CELLS = 1.5
+
 
 def city_sigma_km(pop):
     """Catchment radius for a city of this size."""
     scaled = SIGMA_BASE_KM * (max(pop, 1.0) / SIGMA_REF_POP) ** SIGMA_EXPONENT
     return min(max(scaled, SIGMA_MIN_KM), SIGMA_MAX_KM)
+
+
+def effective_sigma_km(pop, grid, lat):
+    """The city's catchment, or the grid's own resolution, whichever is wider.
+
+    Drawing a kernel finer than the cells is not possible, and pretending
+    otherwise is what made large entries look binned.
+    """
+    cell_km = grid.cell * 111.32 * max(math.cos(math.radians(lat)), 0.05)
+    return max(city_sigma_km(pop), MIN_SIGMA_CELLS * cell_km)
 
 
 def splat_city(field, grid, lon, lat, pop, filled):
@@ -191,7 +207,7 @@ def splat_city(field, grid, lon, lat, pop, filled):
     The kernel never crosses into cells outside the footprint, which is what
     keeps a country border a hard step while the inside of a country is smooth.
     """
-    sigma = city_sigma_km(pop)
+    sigma = effective_sigma_km(pop, grid, lat)
     km_per_deg_lat = 111.32
     km_per_deg_lon = max(111.32 * math.cos(math.radians(lat)), 1.0)
     reach_deg_lon = KERNEL_REACH * sigma / km_per_deg_lon
@@ -225,6 +241,35 @@ def splat_city(field, grid, lon, lat, pop, filled):
     for cell, value in kernel.items():
         field[cell] = field.get(cell, 0.0) + pop * value / total
     return field
+
+
+def extend_edges(cells, cols, rows, radius=2):
+    """Grow the field outward so interpolation has values to sample at a border.
+
+    A rendering aid, not data. Both renderers upscale the grid, and an outside
+    cell at the bottom of the ramp drags every border into a false gradient a
+    cell or two wide. The clip cuts the extension away again, so it is only ever
+    sampled.
+    """
+    out = dict(cells)
+    frontier = set(cells)
+    for _ in range(max(radius, 0)):
+        added = {}
+        for ix, iy in frontier:
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    nx, ny = ix + dx, iy + dy
+                    if not (0 <= nx < cols and 0 <= ny < rows) or (nx, ny) in out:
+                        continue
+                    near = [out[(nx + ax, ny + ay)]
+                            for ax in (-1, 0, 1) for ay in (-1, 0, 1)
+                            if (nx + ax, ny + ay) in out]
+                    added[(nx, ny)] = sum(near) / len(near)
+        if not added:
+            break
+        out.update(added)
+        frontier = set(added)
+    return out
 
 
 def population_shares(cells):

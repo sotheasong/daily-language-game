@@ -29,6 +29,9 @@ import sys
 
 from PIL import Image, ImageChops, ImageDraw, ImageFont
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from pipeline import weights
+
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASEMAP = os.path.join(REPO, ".cache", "geo", "ne_10m_admin_0_countries.geojson")
 FALLBACK_BASEMAP = os.path.join(REPO, ".cache", "geo", "ne_50m_admin_0_countries.geojson")
@@ -161,7 +164,11 @@ def density_layer(entry_density, view, size):
     cell = entry_density["cell"]
     img = Image.new("RGB", (cols, rows), ramp(0.0))
     px = img.load()
-    for ix, iy, w in entry_density["cells"]:
+    # Extended outward first, so interpolation at the coast samples real values
+    # instead of dragging the border into a false gradient. The clip removes it.
+    field = weights.extend_edges(
+        {(c[0], c[1]): c[2] for c in entry_density["cells"]}, cols, rows, radius=2)
+    for (ix, iy), w in field.items():
         if 0 <= ix < cols and 0 <= iy < rows:
             px[ix, rows - 1 - iy] = ramp(math.sqrt(w))
     # Place the grid in the view, then upscale. Bicubic is what turns cells
@@ -235,6 +242,8 @@ def main():
     ap.add_argument("-o", "--out", default="/tmp/footprint-check.png")
     ap.add_argument("--cols", type=int, default=3)
     ap.add_argument("--shape", action="store_true", help="outline only, no density")
+    ap.add_argument("--size", type=int, default=PANEL[0],
+                    help="panel width in pixels, height follows the 13:10 ratio")
     args = ap.parse_args()
 
     path = BASEMAP if os.path.exists(BASEMAP) else FALLBACK_BASEMAP
@@ -247,18 +256,20 @@ def main():
         with open(DENSITY, encoding="utf-8") as fh:
             dens = {e["entry"]: e for e in json.load(fh)}
 
+    size = (args.size, int(args.size * PANEL[1] / PANEL[0]))
     panels = []
     for name in args.entries:
         if name not in feats:
             sys.stderr.write(f"no footprint for {name!r}\n")
             continue
-        panels.append(panel(name, feats[name], basemap, dens.get(name), not args.shape))
+        panels.append(panel(name, feats[name], basemap, dens.get(name),
+                            not args.shape, size))
 
     cols = min(args.cols, len(panels))
     rows = math.ceil(len(panels) / cols)
-    sheet = Image.new("RGB", (cols * PANEL[0], rows * PANEL[1]), (255, 255, 255))
+    sheet = Image.new("RGB", (cols * size[0], rows * size[1]), (255, 255, 255))
     for i, p in enumerate(panels):
-        sheet.paste(p, ((i % cols) * PANEL[0], (i // cols) * PANEL[1]))
+        sheet.paste(p, ((i % cols) * size[0], (i // cols) * size[1]))
     sheet.save(args.out)
     sys.stderr.write(f"wrote {args.out}  {sheet.size[0]}x{sheet.size[1]}\n")
     return 0

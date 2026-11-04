@@ -103,6 +103,26 @@ Fixed in two places rather than by rewriting the geometry:
 0.2 km. Malta is 313 km2 and about 27 km across, so at the old floor it had 20
 cells to its name and drew as a blur.
 
+## The blur, fixed 2026-11-03
+
+Two causes, found from a screenshot of Russian.
+
+**The kernel was narrower than the grid.** Russia's cells are 25 km wide and a
+small town's catchment is 10 km, which is 0.39 of a cell; even Moscow was only
+1.13. A kernel that fits inside one cell cannot spread, so the city drew as a
+single bright square and bicubic upscaling turned the square into a blur.
+`effective_sigma_km` now takes the wider of the city's catchment and 1.5 cells,
+so the field is smooth at any grid resolution.
+
+**Outside cells were painted at the bottom of the ramp.** Both renderers
+interpolate between cells, so a zero just outside the border dragged every edge
+into a false gradient a cell or two wide, which reads as a halo. `extend_edges`
+grows the field outward by two cells before upscaling. The clip removes the
+extension, so it is sampled and never shown.
+
+Not a bug: the pale block in south-central Russia is northern Kazakhstan at a 5%
+share, correctly lighter, and its straight edge is the border.
+
 ## Khmer does not cover eastern Cambodia
 
 Measured 2026-11-03: the footprint covers **70.5% of Cambodia**, and 79% of what

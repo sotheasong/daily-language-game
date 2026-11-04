@@ -223,9 +223,52 @@ class UrbanKernel(unittest.TestCase):
         self.assertAlmostEqual(sum(field.values()), 500_000, delta=1)
         self.assertTrue(all(cell in land for cell in field))
 
+    def test_a_kernel_is_never_narrower_than_the_grid(self):
+        # Russia's cells are 25 km wide and a small town's catchment is 10 km,
+        # which is 0.39 of a cell. The kernel then fits inside one cell, the
+        # city draws as a single bright square, and upscaling turns the square
+        # into a blur. A kernel narrower than the grid cannot be drawn, so it
+        # widens to the grid instead.
+        coarse = weights.Grid(lon0=0.0, lat0=56.0, cell=0.4, cols=30, rows=30)
+        filled = {(x, y) for x in range(30) for y in range(30)}
+        field = {}
+        weights.splat_city(field, coarse, 6.0, 62.0, 50_000, filled)
+        self.assertGreaterEqual(len(field), 5, "a town has to cover several cells")
+
+    def test_a_fine_grid_still_gets_the_city_s_own_catchment(self):
+        # The floor must not inflate a city when the grid can resolve it.
+        fine = weights.Grid(lon0=0.0, lat0=0.0, cell=0.02, cols=200, rows=200)
+        self.assertAlmostEqual(
+            weights.effective_sigma_km(50_000, fine, 1.0),
+            weights.city_sigma_km(50_000), delta=0.5)
+
     def test_a_bigger_city_reaches_further(self):
         self.assertGreater(weights.city_sigma_km(8_000_000),
                            weights.city_sigma_km(40_000))
+
+
+class EdgeExtension(unittest.TestCase):
+    """Outside cells must carry their neighbour's value, not nothing.
+
+    Both renderers upscale the grid and interpolate between cells. An outside
+    cell painted at the bottom of the colour ramp drags every border into a
+    false gradient a cell or two wide, which reads as a halo around the whole
+    footprint. Extending the field outward gives the interpolator real values to
+    sample, and the clip cuts the extension away, so it is sampled and never
+    shown.
+    """
+
+    def test_an_outside_cell_takes_its_neighbour_s_value(self):
+        got = weights.extend_edges({(1, 1): 0.8}, cols=4, rows=4, radius=1)
+        self.assertAlmostEqual(got[(0, 1)], 0.8)
+
+    def test_a_real_cell_is_never_overwritten(self):
+        got = weights.extend_edges({(1, 1): 0.8, (2, 1): 0.2}, cols=4, rows=4, radius=1)
+        self.assertAlmostEqual(got[(2, 1)], 0.2)
+
+    def test_the_extension_does_not_run_away(self):
+        got = weights.extend_edges({(1, 1): 0.8}, cols=12, rows=12, radius=1)
+        self.assertNotIn((8, 8), got)
 
 
 class PopulationShares(unittest.TestCase):
