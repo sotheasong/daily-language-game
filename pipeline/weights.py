@@ -272,6 +272,36 @@ def extend_edges(cells, cols, rows, radius=2):
     return out
 
 
+# How finely to sample each cell when deciding which country it is in. One
+# answer per cell draws a border as a staircase of cells, which at Russia's
+# 25 km cells is a row of visible blocks against Kazakhstan.
+BORDER_SUBSAMPLE = 4
+
+
+def country_fractions(rings_by_iso, grid, inside, subsample=BORDER_SUBSAMPLE):
+    """Fraction of each cell lying in each country.
+
+    A cell on a border comes back split, so the share steps over one cell
+    instead of jumping. Fractions are renormalised to sum to 1, because half a
+    cell in the sea should not halve its weight: the clip already removes the
+    sea, and halving would darken every coastline.
+    """
+    fine = Grid(lon0=grid.lon0, lat0=grid.lat0, cell=grid.cell / subsample,
+                cols=grid.cols * subsample, rows=grid.rows * subsample)
+    counts = collections.defaultdict(collections.Counter)
+    for iso, rings in rings_by_iso.items():
+        for fx, fy in rasterise(rings, fine):
+            base = (fx // subsample, fy // subsample)
+            if base in inside:
+                counts[base][iso] += 1
+    out = {}
+    for base, per in counts.items():
+        total = sum(per.values())
+        if total:
+            out[base] = {iso: n / total for iso, n in per.items()}
+    return out
+
+
 def population_shares(cells):
     """Derive shares from population when no row was authored.
 
@@ -287,7 +317,7 @@ def population_shares(cells):
     return {iso: pop / total for iso, pop in by_country.items()}
 
 
-def apply_shares(cells, shares):
+def apply_shares(cells, shares, fractions=None):
     """Turn {cell: (iso, population)} into {cell: weight}.
 
     A country's share sets the level, so Cambodia reads about 15 times Thailand
@@ -305,7 +335,11 @@ def apply_shares(cells, shares):
 
     out = {}
     for cell, (iso, population) in cells.items():
-        share = shares.get(iso, 0.0)
+        if fractions is not None and cell in fractions:
+            share = sum(frac * shares.get(code, 0.0)
+                        for code, frac in fractions[cell].items())
+        else:
+            share = shares.get(iso, 0.0)
         if share <= 0 or not counts[iso]:
             continue
         mean = totals[iso] / counts[iso]
@@ -464,7 +498,7 @@ def build_entry(rings, wrapped, grid, table, cities, share_map):
 
     lon1 = grid.lon0 + grid.cols * grid.cell
     lat1 = grid.lat0 + grid.rows * grid.cell
-    owner = {}
+    owner, rings_by_iso = {}, {}
     for iso, country in table.items():
         rings_c, box = country["rings"], country["bbox"]
         if wrapped:
@@ -473,6 +507,7 @@ def build_entry(rings, wrapped, grid, table, cities, share_map):
             box = (min(cxs), box[1], max(cxs), box[3])
         if box[2] < grid.lon0 or box[0] > lon1 or box[3] < grid.lat0 or box[1] > lat1:
             continue
+        rings_by_iso[iso] = rings_c
         for cell in rasterise(rings_c, grid):
             if cell in inside and cell not in owner:
                 owner[cell] = iso
@@ -496,7 +531,9 @@ def build_entry(rings, wrapped, grid, table, cities, share_map):
         )
 
     shares = share_map if share_map is not None else population_shares(populations)
-    raw = apply_shares(populations, shares)
+    fractions = country_fractions(
+        {iso: r for iso, r in rings_by_iso.items() if iso in shares}, grid, inside)
+    raw = apply_shares(populations, shares, fractions)
     present = {iso: v for iso, v in shares.items()
                if any(p[0] == iso for p in populations.values()) and v > 0}
     total = sum(present.values()) or 1.0

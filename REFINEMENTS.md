@@ -120,8 +120,20 @@ into a false gradient a cell or two wide, which reads as a halo. `extend_edges`
 grows the field outward by two cells before upscaling. The clip removes the
 extension, so it is sampled and never shown.
 
+**The squares were the border, not the kernel.** Each cell was assigned wholly
+to one country, so the Russia/Kazakhstan boundary drew as a staircase of 25 by
+47 km blocks: measured, the weight dropped 0.345 to 0.019 across a single cell,
+18 to 1. A finer grid only makes finer stairs. `country_fractions` samples each
+cell 4 by 4 and splits it between the countries it straddles, so the share steps
+over the real border line instead of over a row of cells. Fractions are
+renormalised to sum to 1, since half a cell in the sea should not halve its
+weight and would otherwise darken every coastline.
+
 Not a bug: the pale block in south-central Russia is northern Kazakhstan at a 5%
-share, correctly lighter, and its straight edge is the border.
+share, correctly lighter than Russia's 92%.
+
+**Cost.** Sub-sampling took a full rebuild from 7 to 21 seconds. Worth it, and
+the lever if it ever matters is `BORDER_SUBSAMPLE`.
 
 ## Khmer does not cover eastern Cambodia
 

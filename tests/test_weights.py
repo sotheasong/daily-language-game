@@ -271,6 +271,43 @@ class EdgeExtension(unittest.TestCase):
         self.assertNotIn((8, 8), got)
 
 
+class BorderCells(unittest.TestCase):
+    """A cell straddling a border takes a share of both sides.
+
+    Assigning each cell wholly to one country draws the border as a staircase
+    of cells. Measured on Russian: the weight drops from 0.345 to 0.019 across
+    a single 25 km cell at the Kazakhstan border, 18 to 1, and that row of
+    blocks is what shows on the map. A finer grid only makes finer stairs.
+    """
+
+    GRID = None
+
+    def setUp(self):
+        self.GRID = weights.Grid(lon0=0.0, lat0=0.0, cell=2.0, cols=2, rows=2)
+        # The border runs at lat 1, which is inside base cell (0, 0). A fixture
+        # where the border lands on a cell edge tests nothing.
+        self.north = [[(0.0, 1.0), (4.0, 1.0), (4.0, 4.0), (0.0, 4.0), (0.0, 1.0)]]
+        self.south = [[(0.0, 0.0), (4.0, 0.0), (4.0, 1.0), (0.0, 1.0), (0.0, 0.0)]]
+
+    def test_a_cell_half_in_each_country_splits_between_them(self):
+        got = weights.country_fractions(
+            {"AA": self.north, "BB": self.south}, self.GRID, {(0, 0), (0, 1)})
+        self.assertGreater(got[(0, 0)].get("BB", 0), 0.2)
+        self.assertGreater(got[(0, 0)].get("AA", 0), 0.2)
+
+    def test_a_cell_well_inside_one_country_is_undivided(self):
+        got = weights.country_fractions(
+            {"AA": self.north, "BB": self.south}, self.GRID, {(0, 0), (0, 1)})
+        self.assertAlmostEqual(got[(0, 1)].get("AA", 0), 1.0)
+
+    def test_fractions_always_sum_to_one(self):
+        # Half a cell in the sea must not halve its weight. The clip already
+        # takes the sea away, and halving would darken every coastline.
+        coastal = [[(0.0, 2.0), (1.0, 2.0), (1.0, 4.0), (0.0, 4.0), (0.0, 2.0)]]
+        got = weights.country_fractions({"AA": coastal}, self.GRID, {(0, 1)})
+        self.assertAlmostEqual(sum(got[(0, 1)].values()), 1.0)
+
+
 class PopulationShares(unittest.TestCase):
     def test_an_unauthored_entry_derives_its_shares_from_population(self):
         # German needs no authored row. Population alone already gives
