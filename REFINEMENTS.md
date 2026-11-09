@@ -159,6 +159,27 @@ Not a bug, checked rather than assumed: Maltese looked like an outline floating
 over water. Measured, only 2.2% of that footprint is not land. The pale band is
 Malta's own density gradient, since its population sits inland and east.
 
+## The outline and the heatmap were different polygons
+
+Found 2026-11-09, reported from a Khmer screenshot: the outline traced a visibly
+different shape from the shading it was meant to enclose.
+
+Self-inflicted. The reviewer's data was built by an ad-hoc script each time, and
+that script re-simplified the footprints at 0.06 degrees for the outline while
+the density grid came from the canonical 0.01 degree file. Two different
+polygons. Khmer's outline strayed up to **6.4 km** from the geometry the heatmap
+was built on, Spanish 5.8 km, and the coarser outline is also where the
+jaggedness came from: Khmer shipped 172 points against 410 canonical.
+
+`tools/export_reviewer.py` replaces the ad-hoc script and re-simplifies nothing.
+Outlines now come straight from `data/footprints.geojson`, verified identical
+point for point across all 136 entries. The only thing it simplifies is the
+basemap, which is scenery rather than the subject.
+
+The density file is an argument too, so a coarser grid can be built for the page
+without overwriting the canonical one that scoring reads. That trap caught me
+once in the same session.
+
 ## Khmer does not cover eastern Cambodia
 
 Measured 2026-11-03: the footprint covers **70.5% of Cambodia**, and 79% of what

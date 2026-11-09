@@ -64,6 +64,7 @@ Everything here is a decision someone made, versioned on purpose.
 python3 tools/preview.py Khmer Spanish -o /tmp/check.png   # render footprints
 python3 tools/check_countries.py                           # footprint vs country list
 python3 tools/tune_scoring.py --sweep                      # score worked pins
+python3 tools/export_reviewer.py -o <dir>                  # data for the reviewer
 ```
 
 Interactive reviewer for all 136: https://claude.ai/artifact/LfMjxMMtC42JmAvjV6PuQm
