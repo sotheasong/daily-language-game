@@ -14,10 +14,17 @@ generalised areas and they overlap neighbours heavily.
 | Khmer | 99.0–109.9°E | Cambodia 102.3–107.6°E | NE Thailand is Northern Khmer, about 1.4M speakers, and the Mekong Delta is Khmer Krom, about 1M. Both legitimate. The western lobe reaching toward the Gulf of Thailand is not. |
 | Thai | 93.9–107.1°E | Thailand 97.3–105.6°E | Runs west into Myanmar. |
 
-Fix by clipping each footprint against the countries Glottolog lists for the
-entry, which `tools/check_countries.py` already computes. That turns an
-over-extended blob into the intersection of the atlas area and the plausible
-countries, without hand-drawing anything.
+**The proposed fix does not work, checked 2026-11-09.** Clipping each footprint
+against the countries Glottolog lists would do nothing here and damage other
+entries. Khmer lists `KH;LA;TH;VN` and Thai lists `KH;MM;TH`, so both already
+include the countries they over-extend into. And the lists are too incomplete to
+clip against: **Cantonese lists `CN;VN` with no Hong Kong**, and Ossetian lists
+`RU` with no Georgia, so clipping would delete Hong Kong from Cantonese and
+South Ossetia from Ossetian.
+
+What already handles it is `data/shares.tsv`. Khmer's Thai lobe carries a 6%
+share, so it reads faint rather than wrong. The remaining inaccuracy is inside
+Thailand, which no country-level rule can see. It needs a better atlas.
 
 **Asher's shapes are generalised throughout.** Kabyle is a single smooth blob
 rather than the Kabylie massif. Fine for scoring by distance, generous for

@@ -7,7 +7,7 @@ The design record lives in the Obsidian vault at
 `Second Brain/03-Projects/daily-language-game/`. This file is the engineering
 view: what is built, what is being built, what is next.
 
-Last updated 2026-11-03.
+Last updated 2026-11-09.
 
 ---
 
@@ -152,14 +152,17 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
 
 ## Next
 
-3. **Clip the over-extended footprints**, Khmer and Thai first, against the
-   countries Glottolog lists. Branch `footprint-refinements`.
-4. **Build the clip pipeline.** Voice activity detection measuring voiced
+3. **Build the clip pipeline.** Voice activity detection measuring voiced
    seconds, same-speaker splicing to about 8 seconds, loudness normalisation.
    This unlocks roughly 20 hours of listening, which is the real cost of the
    project and the only thing on this list that cannot be shortened.
-5. **The approval gate and review page**, so no session goes live unreviewed.
-6. **Name the game.** Open since the third design pass. It gates the domain.
+4. **The approval gate and review page**, so no session goes live unreviewed.
+5. **Name the game.** Open since the third design pass. It gates the domain.
+
+Dropped: clipping over-extended footprints against Glottolog's country lists.
+Measured 2026-11-09, it does nothing for Khmer or Thai, whose lists already
+include the countries they spill into, and it would delete Hong Kong from
+Cantonese and South Ossetia from Ossetian. See `REFINEMENTS.md`.
 
 ---
 
