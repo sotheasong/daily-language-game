@@ -27,7 +27,7 @@ import math
 import os
 import sys
 
-from PIL import Image, ImageChops, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pipeline import weights
@@ -194,12 +194,14 @@ def panel(entry, feature, basemap, dens, show_density, size=PANEL):
     # water between islands, so the field has to stop at the coast.
     land_mask = Image.new("L", big, 0)
     land_draw = ImageDraw.Draw(land_mask)
+    onscreen = []
     for f in basemap["features"]:
         polys = [shift_east(poly) for poly in polygons(f["geometry"])] if wrapped \
             else polygons(f["geometry"])
         b = bounds_of(polys)
         if b[2] < view[0] or b[0] > view[2] or b[3] < view[1] or b[1] > view[3]:
             continue
+        onscreen.append(polys)
         draw_polys(draw, polys, project, LAND, BORDER, SUPERSAMPLE)
         draw_polys(land_draw, polys, project, 255, 255, 1)
 
@@ -213,10 +215,25 @@ def panel(entry, feature, basemap, dens, show_density, size=PANEL):
         flat = Image.new("RGB", big, (214, 69, 48))
         img = Image.blend(img, Image.composite(flat, img, mask), 0.42)
 
-    outline = Image.new("RGBA", big, (0, 0, 0, 0))
-    draw_polys(ImageDraw.Draw(outline), fp_polys, project,
-               None, EDGE + (255,), 2 * SUPERSAMPLE)
-    img = Image.alpha_composite(img.convert("RGBA"), outline).convert("RGB")
+    # The outline of (footprint and land) is two things: the parts of the
+    # footprint edge that are over land, and the parts of the coastline that are
+    # inside the footprint. Stroke both and keep only what falls inside the
+    # intersection, and the result follows the real border exactly without ever
+    # computing a polygon intersection. The stroke straddles the boundary, so
+    # half of it is masked away; draw it double width to compensate.
+    stroke = Image.new("L", big, 0)
+    draw_polys(ImageDraw.Draw(stroke), fp_polys, project, None, 255, 4 * SUPERSAMPLE)
+    # The coastline is the edge of the land *union*, not each country's outline.
+    # Stroking every country would draw Cambodia's border with Thailand straight
+    # through the middle of the footprint, where the intersection has no
+    # boundary at all. Eroding the land mask and subtracting leaves only the
+    # coast, which is the edge the union actually has.
+    coast = ImageChops.subtract(land_mask, land_mask.filter(ImageFilter.MinFilter(13)))
+    stroke = ImageChops.lighter(stroke, coast)
+    stroke = ImageChops.multiply(stroke, mask)
+
+    edge = Image.new("RGB", big, EDGE)
+    img = Image.composite(edge, img, stroke)
     img = img.resize(size, Image.LANCZOS)
 
     draw = ImageDraw.Draw(img)

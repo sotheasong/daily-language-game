@@ -135,6 +135,30 @@ share, correctly lighter than Russia's 92%.
 **Cost.** Sub-sampling took a full rebuild from 7 to 21 seconds. Worth it, and
 the lever if it ever matters is `BORDER_SUBSAMPLE`.
 
+## Outlines follow the real coast, done 2026-11-09
+
+The fill was clipped to land but the outline was still Asher's raw blob, so it
+floated over sea and cut across borders.
+
+**No polygon-boolean engine was needed.** The boundary of (footprint and land)
+is two things: the parts of the footprint edge that lie over land, and the parts
+of the coast that lie inside the footprint. Stroke both, keep only what falls
+inside the intersection, and the result traces the real border exactly. The
+stroke straddles the boundary and half is clipped away, so it is drawn double
+width.
+
+**The coast is the edge of the land union, not each country's outline.** The
+first attempt stroked every country in view, which drew Cambodia's border with
+Thailand straight through the middle of the footprint, where the intersection
+has no boundary at all. The preview erodes the land mask and subtracts to get
+the union's edge. Canvas has no erosion operator and does not need one: the
+reviewer strokes only the footprint inside the clip, and the coastal edge comes
+free from where the field meets the sea.
+
+Not a bug, checked rather than assumed: Maltese looked like an outline floating
+over water. Measured, only 2.2% of that footprint is not land. The pale band is
+Malta's own density gradient, since its population sits inland and east.
+
 ## Khmer does not cover eastern Cambodia
 
 Measured 2026-11-03: the footprint covers **70.5% of Cambodia**, and 79% of what
