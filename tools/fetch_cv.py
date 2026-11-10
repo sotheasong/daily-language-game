@@ -72,6 +72,7 @@ def describe(item):
         "licence": getattr(details, "licenseAbbreviation", "") or "",
         "paid": bool(getattr(details, "isPaid", False)),
         "format": getattr(details, "format", "") or "",
+        "url": getattr(details, "datasetUrl", "") or "",
     }
 
 
@@ -186,12 +187,26 @@ def main():
         )
 
     os.makedirs(args.cache, exist_ok=True)
+    needs_terms, failed = [], []
     for row, info in resolved:
         if info["paid"]:
             continue
         locale = row["locale"]
         sys.stderr.write(f"\n  {locale}: downloading {info['size'] / 1e6:.0f} MB\n")
-        archive = dc.download_dataset(info["id"], download_directory=args.cache)
+        try:
+            archive = dc.download_dataset(info["id"], download_directory=args.cache)
+        except PermissionError:
+            # Terms are accepted per dataset, in the browser. Collect every one
+            # that needs it rather than stopping at the first, so the whole list
+            # can be clicked through in one go.
+            needs_terms.append((row["input_name"], locale, info["url"]))
+            sys.stderr.write(f"  {locale}: terms not accepted yet\n")
+            continue
+        except Exception as exc:
+            failed.append((locale, f"{type(exc).__name__}: {exc}"))
+            sys.stderr.write(f"  {locale}: {type(exc).__name__}\n")
+            continue
+
         extracted = os.path.join(args.cache, "extracted", locale)
         if not os.path.isdir(extracted):
             os.makedirs(extracted, exist_ok=True)
@@ -199,7 +214,18 @@ def main():
                 tar.extractall(extracted, filter="data")
         kept, where = write_manifest(extracted, locale, args.limit)
         sys.stderr.write(f"  {locale}: {kept} utterances -> {where}\n")
-    return 0
+
+    if needs_terms:
+        sys.stderr.write(
+            f"\n{len(needs_terms)} dataset(s) need their terms accepted once, in a\n"
+            "browser signed in to the same account. Open each, accept, then re-run:\n\n")
+        for name, locale, url in needs_terms:
+            sys.stderr.write(f"  {name:<18} {locale:<8} {url}\n")
+    if failed:
+        sys.stderr.write(f"\n{len(failed)} failed for other reasons:\n")
+        for locale, why in failed:
+            sys.stderr.write(f"  {locale:<8} {why}\n")
+    return 1 if (needs_terms or failed) else 0
 
 
 if __name__ == "__main__":
