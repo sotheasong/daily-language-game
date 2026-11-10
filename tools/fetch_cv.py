@@ -33,6 +33,26 @@ OUT = os.path.join(REPO, ".cache", "cv")
 CANON = re.compile(r"^Common Voice Scripted Speech ([\d.]+) - ", re.I)
 
 
+def load_env(path=None):
+    """Read MDC_API_KEY from a .env at the repo root if it is not already set.
+
+    The key belongs in a gitignored file rather than a shell history or a
+    message, and the documented setup puts it there, so read it from there.
+    """
+    if os.environ.get("MDC_API_KEY"):
+        return
+    path = path or os.path.join(REPO, ".env")
+    if not os.path.exists(path):
+        return
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            os.environ.setdefault(key.strip(), value.strip().strip("'\""))
+
+
 def read_locales(tier=None, only=None):
     path = os.path.join(REPO, "data", "cv-locales.tsv")
     with open(path, encoding="utf-8") as fh:
@@ -138,6 +158,26 @@ def write_manifest(root, locale, limit):
     return len(kept), path
 
 
+def terms_accepted(dataset_id):
+    """Ask whether this dataset can be downloaded, without downloading it.
+
+    Goes through the SDK's own request path rather than a hand-rolled one.
+    A plain urllib POST gets a Cloudflare 403 on browser signature, code 1010,
+    which reads like a refusal and is nothing of the kind. Asking costs one
+    request; finding out by downloading costs gigabytes.
+    """
+    from datacollective import api_utils
+    url = f"{api_utils._get_api_url()}/datasets/{dataset_id}/download"
+    try:
+        api_utils._send_api_request(method="POST", url=url,
+                                    source_function="terms_accepted")
+        return True, ""
+    except PermissionError as exc:
+        return False, str(exc).split(":")[-1].strip()[:70]
+    except Exception as exc:
+        return False, f"{type(exc).__name__}: {exc}"[:90]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -145,6 +185,8 @@ def main():
     ap.add_argument("--locale", nargs="*", help="specific locale codes")
     ap.add_argument("--list", action="store_true", help="resolve only, no download")
     ap.add_argument("--pull", action="store_true", help="download and extract")
+    ap.add_argument("--check", action="store_true",
+                    help="ask whether each dataset is downloadable, without downloading")
     ap.add_argument("--limit", type=int, default=60,
                     help="utterances to keep per locale")
     ap.add_argument("--cache", default=os.path.join(REPO, ".cache", "cv-archives"))
@@ -173,11 +215,30 @@ def main():
     sys.stderr.write(f"\n  {len(resolved)} locales, {total / 1e9:.1f} GB total\n")
     if paid:
         sys.stderr.write(f"  {len(paid)} are paid datasets and were not fetched\n")
+    if args.check:
+        load_env()
+        if not os.environ.get("MDC_API_KEY"):
+            raise SystemExit("MDC_API_KEY is not set and no .env was found")
+        sys.stderr.write("\n  checking whether each dataset is unlocked:\n")
+        blocked = []
+        for row, info in resolved:
+            ok, why = terms_accepted(info["id"])
+            sys.stderr.write(f"    {row['input_name']:<18}{row['locale']:<8}"
+                             f"{'ready' if ok else 'blocked':<9}{'' if ok else why}\n")
+            if not ok:
+                blocked.append((row["input_name"], row["locale"], info["url"]))
+        if blocked:
+            sys.stderr.write(f"\n  {len(blocked)} still need their terms accepted:\n")
+            for name, locale, url in blocked:
+                sys.stderr.write(f"    {name:<18}{locale:<8}{url}\n")
+        return 1 if blocked else 0
+
     if args.list or not args.pull:
         sys.stderr.write("  (--list only; pass --pull to download)\n")
         return 0
 
     import datacollective as dc
+    load_env()
     if not os.environ.get("MDC_API_KEY"):
         raise SystemExit(
             "MDC_API_KEY is not set in this shell.\n"

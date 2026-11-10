@@ -1,0 +1,57 @@
+# Get presigned URL and download file
+RESPONSE=$(curl -X POST "https://mozilladatacollective.com/api/datasets/cmu5wkah500c2o10719lem8m8/download" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json")
+
+# Extract download URL and download file
+DOWNLOAD_URL=$(echo $RESPONSE | jq -r '.downloadUrl')
+curl -o "common-voice-scripted-speech-27-0-turkis-b14760fe.tar.gz" "$DOWNLOAD_URL"
+
+# Get presigned URL and download file
+RESPONSE=$(curl -X POST "https://mozilladatacollective.com/api/datasets/cmu62gjbl00nso107n7ct8dyl/download" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json")
+
+# Extract download URL and download file
+DOWNLOAD_URL=$(echo $RESPONSE | jq -r '.downloadUrl')
+curl -o "common-voice-scripted-speech-27-0-dutch-75546e19.tar.gz" "$DOWNLOAD_URL"
+
+
+# Get presigned URL and download file
+RESPONSE=$(curl -X POST "https://mozilladatacollective.com/api/datasets/cmu5w9ub700b4o10780ew57mk/download" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json")
+
+# Extract download URL and download file
+DOWNLOAD_URL=$(echo $RESPONSE | jq -r '.downloadUrl')
+curl -o "common-voice-scripted-speech-27-0-swedis-3f2b0b3d.tar.gz" "$DOWNLOAD_URL"
+
+
+# Get presigned URL and download file
+RESPONSE=$(curl -X POST "https://mozilladatacollective.com/api/datasets/cmu62fru800nko107kvyi4hrc/download" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json")
+
+# Extract download URL and download file
+DOWNLOAD_URL=$(echo $RESPONSE | jq -r '.downloadUrl')
+curl -o "common-voice-scripted-speech-27-0-greek-79906dd3.tar.gz" "$DOWNLOAD_URL"
+
+
+# Get presigned URL and download file
+RESPONSE=$(curl -X POST "https://mozilladatacollective.com/api/datasets/cmu5vlext009to107ev1s9lk8/download" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json")
+
+# Extract download URL and download file
+DOWNLOAD_URL=$(echo $RESPONSE | jq -r '.downloadUrl')
+curl -o "common-voice-scripted-speech-27-0-hindi-25c8439c.tar.gz" "$DOWNLOAD_URL"
+
+
+# Get presigned URL and download file
+RESPONSE=$(curl -X POST "https://mozilladatacollective.com/api/datasets/cmu5vci3w00agnq07hy4nbauv/download" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json")
+
+# Extract download URL and download file
+DOWNLOAD_URL=$(echo $RESPONSE | jq -r '.downloadUrl')
+curl -o "common-voice-scripted-speech-27-0-vietna-b785f6a0.tar.gz" "$DOWNLOAD_URL"
