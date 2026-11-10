@@ -16,3 +16,7 @@ data/density.json
 
 # Built clips, regenerate with: python3 -m pipeline.clips
 .cache/clips/
+
+# Secrets and the tools venv
+.env
+.venv/
