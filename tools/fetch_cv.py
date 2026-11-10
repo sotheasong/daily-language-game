@@ -96,11 +96,18 @@ def describe(item):
     }
 
 
-def write_manifest(root, locale, limit):
+def write_manifest(root, locale, speakers, per_speaker):
     """Turn an extracted Common Voice locale into the manifest clips.py reads.
 
     Common Voice ships validated.tsv with client_id, path and sentence. Only
     validated rows are used: the rest have not been checked by two listeners.
+
+    **Several utterances from each of a few speakers, not one from many.** The
+    first version spread the sample as widely as it could, which gave 60
+    utterances from 60 speakers and built zero clips: a clip is spliced from
+    one speaker's takes, and a Common Voice prompt is about 2.4 voiced seconds,
+    so reaching 8 needs three or four from the same person. Variety comes from
+    using different speakers for different clips, not within one.
     """
     validated = None
     for base, _dirs, names in os.walk(root):
@@ -114,20 +121,17 @@ def write_manifest(root, locale, limit):
     with open(validated, encoding="utf-8") as fh:
         rows = list(csv.DictReader(fh, delimiter="\t"))
 
-    # Spread across speakers rather than taking the first N rows, which would
-    # be one prolific contributor. Different voices is the whole point.
     by_speaker = {}
     for row in rows:
         by_speaker.setdefault(row.get("client_id", ""), []).append(row)
-    picked, speakers = [], sorted(by_speaker, key=lambda k: -len(by_speaker[k]))
-    while len(picked) < limit and speakers:
-        for speaker in list(speakers):
-            if by_speaker[speaker]:
-                picked.append(by_speaker[speaker].pop())
-            else:
-                speakers.remove(speaker)
-            if len(picked) >= limit:
-                break
+    # Only speakers with enough takes to build a clip from are worth taking.
+    ranked = sorted((k for k in by_speaker if len(by_speaker[k]) >= per_speaker),
+                    key=lambda k: -len(by_speaker[k]))
+    if not ranked:
+        ranked = sorted(by_speaker, key=lambda k: -len(by_speaker[k]))
+    picked = []
+    for speaker in ranked[:speakers]:
+        picked.extend(by_speaker[speaker][:per_speaker])
 
     out_dir = os.path.join(OUT, locale)
     os.makedirs(out_dir, exist_ok=True)
@@ -178,6 +182,25 @@ def terms_accepted(dataset_id):
         return False, f"{type(exc).__name__}: {exc}"[:90]
 
 
+def download_with_backoff(dc, dataset_id, cache, pause, tries=5):
+    """Download, waiting out MDC's rate limiter rather than giving up on it.
+
+    Pulling six locales back to back got one through and rate-limited the other
+    five. The limit is per account and clears on its own, so waiting is the
+    whole fix.
+    """
+    import time
+    for attempt in range(tries):
+        try:
+            return dc.download_dataset(dataset_id, download_directory=cache)
+        except dc.RateLimitError:
+            if attempt == tries - 1:
+                raise
+            wait = pause * (attempt + 1)
+            sys.stderr.write(f"    rate limited, waiting {wait}s\n")
+            time.sleep(wait)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -187,9 +210,13 @@ def main():
     ap.add_argument("--pull", action="store_true", help="download and extract")
     ap.add_argument("--check", action="store_true",
                     help="ask whether each dataset is downloadable, without downloading")
-    ap.add_argument("--limit", type=int, default=60,
-                    help="utterances to keep per locale")
+    ap.add_argument("--speakers", type=int, default=8,
+                    help="how many speakers to sample per locale")
+    ap.add_argument("--per-speaker", type=int, default=10,
+                    help="utterances per speaker; a clip needs three or four")
     ap.add_argument("--cache", default=os.path.join(REPO, ".cache", "cv-archives"))
+    ap.add_argument("--pause", type=int, default=90,
+                    help="seconds to wait after a rate limit, doubling each retry")
     args = ap.parse_args()
 
     rows = read_locales(args.tier, set(args.locale) if args.locale else None)
@@ -255,7 +282,7 @@ def main():
         locale = row["locale"]
         sys.stderr.write(f"\n  {locale}: downloading {info['size'] / 1e6:.0f} MB\n")
         try:
-            archive = dc.download_dataset(info["id"], download_directory=args.cache)
+            archive = download_with_backoff(dc, info["id"], args.cache, args.pause)
         except PermissionError:
             # Terms are accepted per dataset, in the browser. Collect every one
             # that needs it rather than stopping at the first, so the whole list
@@ -273,7 +300,7 @@ def main():
             os.makedirs(extracted, exist_ok=True)
             with tarfile.open(archive) as tar:
                 tar.extractall(extracted, filter="data")
-        kept, where = write_manifest(extracted, locale, args.limit)
+        kept, where = write_manifest(extracted, locale, args.speakers, args.per_speaker)
         sys.stderr.write(f"  {locale}: {kept} utterances -> {where}\n")
 
     if needs_terms:

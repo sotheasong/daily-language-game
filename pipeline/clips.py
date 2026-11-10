@@ -490,13 +490,21 @@ def build_clips(takes, out_dir, target_s=TARGET_VOICED_S, min_voiced_s=MIN_VOICE
     os.makedirs(out_dir, exist_ok=True)
     built = []
     for label, items in sorted(by_label.items()):
+        # Round robin across speakers rather than draining one before starting
+        # the next. Four clips for an entry should be four voices where the
+        # corpus allows it: taking them in speaker order gave two speakers and
+        # two clips each, which is a voice a regular player could learn.
+        pool = {speaker: [t for t in items if t["speaker"] == speaker]
+                for speaker in sorted({t["speaker"] for t in items})}
         made = 0
-        for speaker in sorted({t["speaker"] for t in items}):
-            remaining = [t for t in items if t["speaker"] == speaker]
-            while per_label is None or made < per_label:
-                plan = plan_splice(remaining, speaker, target_s, min_voiced_s)
-                if not plan:
+        while per_label is None or made < per_label:
+            progressed = False
+            for speaker in sorted(pool):
+                if per_label is not None and made >= per_label:
                     break
+                plan = plan_splice(pool[speaker], speaker, target_s, min_voiced_s)
+                if not plan:
+                    continue
                 parts, budget = [], target_s
                 for take in plan:
                     span = trim_to_voiced(take["segments"], budget,
@@ -505,7 +513,7 @@ def build_clips(takes, out_dir, target_s=TARGET_VOICED_S, min_voiced_s=MIN_VOICE
                         parts.append((take["path"], span[0], span[1]))
                         budget -= take["voiced_s"]
                 if not parts:
-                    break
+                    continue
                 name = clip_id(parts)
                 splice(parts, os.path.join(out_dir, f"{name}.opus"))
                 built.append({
@@ -515,9 +523,10 @@ def build_clips(takes, out_dir, target_s=TARGET_VOICED_S, min_voiced_s=MIN_VOICE
                     "sources": " ".join(t["id"] for t in plan),
                 })
                 made += 1
+                progressed = True
                 used = {t["id"] for t in plan}
-                remaining = [t for t in remaining if t["id"] not in used]
-            if per_label is not None and made >= per_label:
+                pool[speaker] = [t for t in pool[speaker] if t["id"] not in used]
+            if not progressed:
                 break
     return built
 
