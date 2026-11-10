@@ -240,6 +240,32 @@ class TrimToTarget(unittest.TestCase):
         self.assertAlmostEqual(end - start, 8.0, delta=0.01)
 
 
+class PlanningMargin(unittest.TestCase):
+    """Plan above the spec, because the delivered length varies.
+
+    Measured over 67 built clips: the median lands at 8.2 voiced seconds
+    against an 8.0 target, so there is no systematic shortfall. The spread is
+    the problem. 17 of 67 came in under 8 and the shortest was 6.3, because
+    the voiced measurement is taken before the loudness pass and the encode,
+    and both move it a little either way.
+
+    Aiming at 9 lifts the whole distribution so the tail clears the spec,
+    which costs about a second of audio and buys a floor.
+    """
+
+    def test_planning_aims_above_what_a_clip_must_hold(self):
+        self.assertGreater(clips.PLAN_VOICED_S, clips.TARGET_VOICED_S)
+
+    def test_the_default_plan_uses_the_margin(self):
+        takes = [
+            {"id": "a", "speaker": "s1", "voiced_s": 4.5},
+            {"id": "b", "speaker": "s1", "voiced_s": 4.5},
+            {"id": "c", "speaker": "s1", "voiced_s": 4.5},
+        ]
+        got = clips.plan_splice(takes, speaker="s1")
+        self.assertGreaterEqual(sum(t["voiced_s"] for t in got), clips.PLAN_VOICED_S)
+
+
 class TightestFit(unittest.TestCase):
     """Given a choice, take the one that fits, not the longest one.
 

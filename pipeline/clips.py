@@ -40,6 +40,13 @@ MIN_VOICED_S = 2.0
 # What a finished round clip should hold.
 TARGET_VOICED_S = 8.0
 
+# What to aim for when planning one. Measured over 67 built clips: the median
+# lands at 8.2 voiced seconds against an 8.0 target, so there is no systematic
+# shortfall, but 17 of 67 came in under and the shortest was 6.3. The voiced
+# measurement is taken before the loudness pass and the encode, and both move it
+# a little either way. Aiming a second high lifts the tail over the spec.
+PLAN_VOICED_S = 9.0
+
 FRAME_MS = 20
 # Speech sits this far above the room tone. Measured against a noise floor
 # rather than an absolute level, because recording volumes vary wildly.
@@ -281,7 +288,7 @@ def clip_id(parts, length=16):
     return digest.hexdigest()[:length]
 
 
-def plan_splice(takes, speaker, target_s=TARGET_VOICED_S, min_voiced_s=MIN_VOICED_S):
+def plan_splice(takes, speaker, target_s=PLAN_VOICED_S, min_voiced_s=MIN_VOICED_S):
     """Choose utterances from one speaker to reach about `target_s` voiced.
 
     Returns an empty list rather than a short clip. A clip that falls short of
@@ -412,7 +419,7 @@ def splice(parts, out_path, rate=PUBLISH_RATE, lufs=PUBLISH_LUFS):
     return out_path
 
 
-def audit(takes, target_s=TARGET_VOICED_S, min_voiced_s=MIN_VOICED_S):
+def audit(takes, target_s=PLAN_VOICED_S, min_voiced_s=MIN_VOICED_S):
     """Group takes by label and report how many finished clips each could make.
 
     The number that matters is not hours of audio but finished clips: a corpus
@@ -477,7 +484,7 @@ def survey(root, manifest, label_field, giveaways):
     return takes
 
 
-def build_clips(takes, out_dir, target_s=TARGET_VOICED_S, min_voiced_s=MIN_VOICED_S,
+def build_clips(takes, out_dir, target_s=PLAN_VOICED_S, min_voiced_s=MIN_VOICED_S,
                 per_label=None):
     """Make finished clips, longest-first within a speaker, and record provenance."""
     import collections
@@ -543,7 +550,8 @@ def main():
     ap.add_argument("--per-label", type=int, default=None,
                     help="stop after this many clips per label")
     ap.add_argument("--min-voiced", type=float, default=MIN_VOICED_S)
-    ap.add_argument("--target", type=float, default=TARGET_VOICED_S)
+    ap.add_argument("--target", type=float, default=PLAN_VOICED_S,
+                    help="voiced seconds to plan for; a little above what a clip must hold")
     ap.add_argument("--no-screen", action="store_true",
                     help="skip the transcript screen")
     args = ap.parse_args()
