@@ -191,6 +191,17 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
    **Still needed:** Mozilla Data Collective access. EdAcc covers 9 of the 17
    accent entries and none of the 119 languages.
 
+   **Clips exist.** 60 from EdAcc across 9 accents, 4 from Turkish Common
+   Voice, all 8 to 12 seconds with a 7.8 second voiced floor.
+
+   **MDC rate-limits downloads to roughly one locale per long window.** One
+   3 GB pull went through on 2026-11-09 and everything for the next hour was
+   refused, 18 retries, none succeeding. Pull one locale at a time, smallest
+   first, across days. Hebrew 151 MB, Korean 219, Vietnamese 485 are the cheap
+   ones; Spanish alone is 52 GB.
+
+   Terms accepted so far: tr nl sv-SE el hi vi he ko. Downloaded: tr.
+
 2. **The approval gate and review page**, so no session goes live unreviewed.
 3. **Name the game.** Open since the third design pass. It gates the domain.
 

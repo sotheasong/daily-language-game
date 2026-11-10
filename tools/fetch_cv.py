@@ -13,6 +13,14 @@ this is the only route. The catalog is public; downloading needs an API key.
 Writes .cache/cv/<locale>/ with audio and a manifest.tsv that
 `python3 -m pipeline.clips` reads directly.
 
+**MDC rate-limits downloads hard.** Observed 2026-11-09: one 3 GB locale went
+through at 18:40 and every download after it was refused for the next hour, 18
+retries across five locales, none succeeding. That is a quota rather than a
+burst limiter, so waiting minutes does not help and --pause cannot fix it.
+Pull a locale at a time, smallest first, and come back the next day. The real
+window is not documented in the SDK; the figure above is inferred from
+behaviour.
+
 Needs the datacollective SDK, so it runs from .venv rather than the system
 Python, which Homebrew marks externally managed. The pipeline itself stays
 stdlib; this is a tool.
