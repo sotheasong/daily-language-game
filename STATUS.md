@@ -171,12 +171,21 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
 
 ## Next
 
-3. **Build the clip pipeline.** Voice activity detection measuring voiced
-   seconds, same-speaker splicing to about 8 seconds, loudness normalisation.
-   This unlocks roughly 20 hours of listening, which is the real cost of the
-   project and the only thing on this list that cannot be shortened.
-4. **The approval gate and review page**, so no session goes live unreviewed.
-5. **Name the game.** Open since the third design pass. It gates the domain.
+1. **Clip pipeline**, in progress on branch `clip-pipeline`. Voiced seconds,
+   splice planning and the EdAcc fetch and audit are written and tested there.
+   ffmpeg is installed as of 2026-11-09, so Common Voice's mp3 is reachable.
+
+   The audit found EdAcc covers 9 of the 17 accent entries and yields 185 clips
+   of 8 voiced seconds from 2.8% of the corpus, so volume is not the problem.
+   The other 7 accents and all 119 languages need Mozilla Data Collective
+   access, which is still the one unresolved dependency.
+
+2. **The approval gate and review page**, so no session goes live unreviewed.
+3. **Name the game.** Open since the third design pass. It gates the domain.
+
+Parked on `footprint-refinements`: the map work. Outlines, borders and the
+density plot are accurate enough to build on, and the remaining items are in
+`REFINEMENTS.md`.
 
 Dropped: clipping over-extended footprints against Glottolog's country lists.
 Measured 2026-11-09, it does nothing for Khmer or Thai, whose lists already
