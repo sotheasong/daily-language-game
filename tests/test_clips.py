@@ -142,5 +142,156 @@ class WavDecoding(unittest.TestCase):
         self.assertEqual(got[0], 2000)
 
 
+class Screening(unittest.TestCase):
+    """Reject takes whose transcript makes them unusable, before anyone listens.
+
+    EdAcc ships transcripts, so the screen is free. Three of these would break
+    the game outright and the rest waste the curator's time.
+    """
+
+    def test_a_non_speech_marker_is_rejected(self):
+        self.assertIsNotNone(clips.screen("IGNORE_TIME_SEGMENT_IN_SCORING"))
+
+    def test_another_language_in_the_clip_is_fatal(self):
+        # <FOREIGN> marks code switching. A clip of Kenyan English with Swahili
+        # in it is a wrong answer dressed as a right one.
+        reason = clips.screen("AND THEN SHE SAID <FOREIGN> AND I LAUGHED")
+        self.assertIn("foreign", reason.lower())
+
+    def test_two_people_talking_at_once_is_rejected(self):
+        # <OVERLAP> means two voices, and in a dyadic corpus the other voice is
+        # usually a different accent.
+        self.assertIsNotNone(clips.screen("YEAH <OVERLAP> I KNOW WHAT YOU MEAN"))
+
+    def test_a_backchannel_is_not_a_language_sample(self):
+        # "MM HMM" clears a duration floor and teaches a player nothing.
+        self.assertIsNotNone(clips.screen("MM HMM MM HMM MM"))
+
+    def test_ordinary_conversation_is_kept(self):
+        self.assertIsNone(clips.screen(
+            "YEAH THE WEATHER'S ACTUALLY QUITE NICE I FEEL LIKE WE HAVEN'T HAD SUN"))
+
+    def test_a_place_name_gives_the_answer_away(self):
+        reason = clips.screen("I GREW UP JUST OUTSIDE NAIROBI AND MOVED LATER",
+                              giveaways={"nairobi", "kenya"})
+        self.assertIn("nairobi", reason.lower())
+
+    def test_a_giveaway_matches_whole_words_only(self):
+        # MALI must not fire on MALICIOUS, or half the corpus goes in the bin.
+        self.assertIsNone(clips.screen(
+            "IT WAS A MALICIOUS RUMOUR AND NOBODY BELIEVED A WORD OF IT",
+            giveaways={"mali"}))
+
+
+class VoicedSpan(unittest.TestCase):
+    """What to cut from a take: the speech, plus a little air at each end.
+
+    Cutting each voiced segment separately and butting them together chops the
+    rhythm out of a sentence. The span runs from first speech to last, so the
+    pauses inside stay where the speaker put them, and only the dead air at the
+    ends goes.
+    """
+
+    def test_it_spans_first_speech_to_last(self):
+        got = clips.voiced_span([(1.0, 2.0), (2.6, 3.5)], pad_s=0.0)
+        self.assertEqual(got, (1.0, 3.5))
+
+    def test_it_leaves_a_little_air(self):
+        start, end = clips.voiced_span([(1.0, 3.0)], pad_s=0.2)
+        self.assertAlmostEqual(start, 0.8)
+        self.assertAlmostEqual(end, 3.2)
+
+    def test_the_padding_does_not_run_off_the_start(self):
+        start, _end = clips.voiced_span([(0.05, 2.0)], pad_s=0.3)
+        self.assertEqual(start, 0.0)
+
+    def test_the_padding_does_not_run_past_the_end(self):
+        _start, end = clips.voiced_span([(1.0, 4.9)], pad_s=0.3, duration=5.0)
+        self.assertEqual(end, 5.0)
+
+    def test_a_take_with_no_speech_has_no_span(self):
+        self.assertIsNone(clips.voiced_span([], pad_s=0.2))
+
+
+class TrimToTarget(unittest.TestCase):
+    """A take longer than the target is cut down, not used whole.
+
+    Measured on the first real build: only 13 of 63 clips landed inside the
+    8 to 12 second spec. The median was 15.7 and the longest 51, because a
+    single take with 16 voiced seconds was spliced in entire.
+    """
+
+    def test_a_long_take_is_cut_at_the_target(self):
+        # 15 voiced seconds in three bursts. Eight seconds of it ends inside
+        # the second burst.
+        segments = [(0.0, 5.0), (6.0, 11.0), (12.0, 17.0)]
+        start, end = clips.trim_to_voiced(segments, target_s=8.0, pad_s=0.0)
+        self.assertEqual(start, 0.0)
+        self.assertAlmostEqual(end, 9.0, delta=0.01)
+
+    def test_a_short_take_is_left_alone(self):
+        segments = [(1.0, 3.0)]
+        self.assertEqual(clips.trim_to_voiced(segments, target_s=8.0, pad_s=0.0),
+                         (1.0, 3.0))
+
+    def test_it_never_cuts_below_a_usable_clip(self):
+        segments = [(0.0, 20.0)]
+        start, end = clips.trim_to_voiced(segments, target_s=8.0, pad_s=0.0)
+        self.assertAlmostEqual(end - start, 8.0, delta=0.01)
+
+
+class TightestFit(unittest.TestCase):
+    """Given a choice, take the one that fits, not the longest one.
+
+    Sorting longest first minimises joins, which is right when several takes
+    are needed. It is wrong when one take alone would do: a 20 second take and
+    a 9 second take both clear an 8 second target, and picking the 20 produced
+    a 51 second clip.
+    """
+
+    TAKES = [
+        {"id": "long", "speaker": "s1", "voiced_s": 20.0},
+        {"id": "snug", "speaker": "s1", "voiced_s": 9.0},
+        {"id": "short", "speaker": "s1", "voiced_s": 3.0},
+    ]
+
+    def test_one_take_that_fits_beats_a_much_longer_one(self):
+        got = clips.plan_splice(self.TAKES, speaker="s1", target_s=8.0)
+        self.assertEqual([t["id"] for t in got], ["snug"])
+
+    def test_several_are_joined_when_none_is_enough_alone(self):
+        takes = [
+            {"id": "a", "speaker": "s1", "voiced_s": 4.0},
+            {"id": "b", "speaker": "s1", "voiced_s": 3.5},
+            {"id": "c", "speaker": "s1", "voiced_s": 3.0},
+        ]
+        got = clips.plan_splice(takes, speaker="s1", target_s=8.0)
+        self.assertGreaterEqual(sum(t["voiced_s"] for t in got), 8.0)
+        self.assertLessEqual(len(got), 3)
+
+
+class ClipId(unittest.TestCase):
+    """A clip is named for what is in it.
+
+    The design wants filenames that give nothing away and a clip that changes
+    when its contents change, so an approval cannot survive a swapped source.
+    """
+
+    PARTS = [("edacc/a.wav", 1.0, 4.0), ("edacc/b.wav", 0.5, 5.5)]
+
+    def test_the_same_sources_give_the_same_name(self):
+        self.assertEqual(clips.clip_id(self.PARTS), clips.clip_id(list(self.PARTS)))
+
+    def test_a_changed_span_gives_a_different_name(self):
+        other = [self.PARTS[0], ("edacc/b.wav", 0.5, 5.6)]
+        self.assertNotEqual(clips.clip_id(self.PARTS), clips.clip_id(other))
+
+    def test_the_name_says_nothing_about_the_answer(self):
+        name = clips.clip_id([("edacc/kenyan-english-nairobi.wav", 0.0, 8.0)])
+        self.assertNotIn("kenyan", name)
+        self.assertNotIn("nairobi", name)
+        self.assertTrue(name.isalnum())
+
+
 if __name__ == "__main__":
     unittest.main()

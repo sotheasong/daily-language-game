@@ -24,10 +24,15 @@ import array
 import io
 import math
 import os
+import re
+import hashlib
+import json
 import shutil
 import subprocess
 import sys
 import wave
+
+from pipeline import sources
 
 # A source utterance below this is a word, not a sample of a language.
 MIN_VOICED_S = 2.0
@@ -102,6 +107,180 @@ def voiced_seconds(samples, rate, **kwargs):
     return sum(end - start for start, end in voiced_segments(samples, rate, **kwargs))
 
 
+# Transcript markers that make a take unusable. The first three would break
+# the game rather than merely waste a listen.
+FATAL_TAGS = {
+    "<FOREIGN": "code switching, another language is in the clip",
+    "<OVERLAP": "two people talking at once, and the other voice is a different accent",
+    "<DTMF": "phone tones over the speech",
+}
+NON_SPEECH = ("IGNORE_TIME_SEGMENT_IN_SCORING",)
+# A real language sample needs some lexical variety. "MM HMM MM HMM" clears a
+# duration floor and teaches a player nothing.
+MIN_DISTINCT_WORDS = 4
+
+_WORD = re.compile(r"[A-Za-z']+")
+
+
+def screen(text, giveaways=()):
+    """Return why a take is unusable, or None to keep it.
+
+    EdAcc ships transcripts, so this costs nothing and spares the curator from
+    auditioning clips that were never going to work.
+    """
+    raw = (text or "").strip()
+    if not raw:
+        return "no transcript"
+    upper = raw.upper()
+    for marker in NON_SPEECH:
+        if marker in upper:
+            return "not speech"
+    for tag, reason in FATAL_TAGS.items():
+        if tag in upper:
+            # Name the tag, so a curator can find it in the transcript.
+            return f"{tag.lstrip('<').lower()}: {reason}"
+
+    words = [w.lower() for w in _WORD.findall(raw)]
+    if len(set(words)) < MIN_DISTINCT_WORDS:
+        return "a backchannel, not a language sample"
+
+    hits = sorted(set(words) & {g.lower() for g in giveaways})
+    if hits:
+        return f"names {', '.join(hits)}, which gives the answer away"
+    return None
+
+
+def load_giveaways(min_city_pop=300_000):
+    """Words that would hand a player the answer, built from the game's own data.
+
+    Entry names, country names and demonyms, and the larger cities. Derived
+    rather than hand-listed, so it stays in step with the pool: add a language
+    and its name is screened for from the next run.
+
+    Small towns are left out on purpose. Nobody placing a language from the
+    sound of it is helped by hearing a village named, and every extra term is
+    another chance to reject a take for nothing.
+    """
+    terms = set()
+
+    entries = os.path.join(sources.DATA_DIR, "entries.tsv")
+    if os.path.exists(entries):
+        with open(entries, encoding="utf-8") as fh:
+            for line in fh:
+                if line.strip() and not line.startswith("#"):
+                    for word in _WORD.findall(line.split("\t")[0]):
+                        if len(word) > 3:
+                            terms.add(word.lower())
+
+    geo = os.path.join(sources.CACHE_DIR, "geo")
+    countries = os.path.join(geo, "ne_50m_admin_0_countries.geojson")
+    if os.path.exists(countries):
+        with open(countries, encoding="utf-8") as fh:
+            for feature in json.load(fh)["features"]:
+                props = feature["properties"]
+                for key in ("NAME", "NAME_LONG", "ADMIN"):
+                    for word in _WORD.findall(str(props.get(key) or "")):
+                        if len(word) > 3:
+                            terms.add(word.lower())
+
+    places = os.path.join(geo, "ne_10m_populated_places_simple.geojson")
+    if os.path.exists(places):
+        with open(places, encoding="utf-8") as fh:
+            for feature in json.load(fh)["features"]:
+                props = feature["properties"]
+                if (props.get("pop_max") or 0) < min_city_pop:
+                    continue
+                for word in _WORD.findall(str(props.get("name") or "")):
+                    if len(word) > 3:
+                        terms.add(word.lower())
+
+    # Countries are not enough: Scotland and Wales are admin-1, and so is every
+    # region a hand-drawn footprint is cut from.
+    regions = os.path.join(geo, "ne_10m_admin_1_states_provinces.geojson")
+    if os.path.exists(regions):
+        with open(regions, encoding="utf-8") as fh:
+            for feature in json.load(fh)["features"]:
+                props = feature["properties"]
+                for key in ("geonunit", "region"):
+                    for word in _WORD.findall(str(props.get(key) or "")):
+                        if len(word) > 3:
+                            terms.add(word.lower())
+
+    # Somewhere is named after almost every ordinary word. These are the ones
+    # whose place sense is vanishingly rare next to their everyday sense, found
+    # by screening the EdAcc sample and reading what it threw out: Nice cost six
+    # takes for the word "nice", Hạ Long four for "long".
+    #
+    # The list stays short on purpose. A wrong reject costs one take out of
+    # thousands; a wrong accept ships a clip that names its own answer.
+    terms -= {
+        "most", "south", "north", "east", "west", "central", "union", "general",
+        "victoria", "springs", "george", "charlotte", "jordan", "chad", "turkey",
+        "china", "nice", "long", "blue", "cook", "upon", "area", "base", "city",
+        "great", "heard", "special", "reading", "beach", "english", "mobile",
+        "deal", "bath", "hope", "white", "orange", "race", "same", "life",
+    }
+    return terms
+
+
+# A little air at each end, so a clip does not start mid-breath.
+PAD_S = 0.18
+
+
+def voiced_span(segments, pad_s=PAD_S, duration=None):
+    """The stretch to cut from a take: first speech to last, plus a little air.
+
+    Cutting each voiced segment out separately and butting them together chops
+    the rhythm out of a sentence. Keeping the span means the pauses inside stay
+    where the speaker put them, and only the dead air at the ends goes.
+    """
+    if not segments:
+        return None
+    start = max(0.0, segments[0][0] - pad_s)
+    end = segments[-1][1] + pad_s
+    if duration is not None:
+        end = min(end, duration)
+    return (start, end)
+
+
+def trim_to_voiced(segments, target_s, pad_s=PAD_S, duration=None):
+    """Cut a take down to about `target_s` of speech.
+
+    A take longer than the target used whole is what made the first real build
+    overshoot: 51 seconds at the worst, against an 8 to 12 second spec. Walk
+    the voiced stretches until the budget is spent and end there, so the clip
+    stops at a natural point rather than mid-word.
+    """
+    if not segments:
+        return None
+    spent = 0.0
+    end = segments[-1][1]
+    for seg_start, seg_end in segments:
+        length = seg_end - seg_start
+        if spent + length >= target_s:
+            end = seg_start + (target_s - spent)
+            break
+        spent += length
+    start = max(0.0, segments[0][0] - pad_s)
+    end = end + pad_s
+    if duration is not None:
+        end = min(end, duration)
+    return (start, end)
+
+
+def clip_id(parts, length=16):
+    """Name a clip for its contents.
+
+    A content hash, so the filename gives nothing away and changes the moment a
+    source or a span does. An approval is a signature over content, and it must
+    not survive someone swapping a take underneath it.
+    """
+    digest = hashlib.sha256()
+    for source, start, end in parts:
+        digest.update(f"{source}|{start:.3f}|{end:.3f}\n".encode("utf-8"))
+    return digest.hexdigest()[:length]
+
+
 def plan_splice(takes, speaker, target_s=TARGET_VOICED_S, min_voiced_s=MIN_VOICED_S):
     """Choose utterances from one speaker to reach about `target_s` voiced.
 
@@ -111,8 +290,19 @@ def plan_splice(takes, speaker, target_s=TARGET_VOICED_S, min_voiced_s=MIN_VOICE
     """
     usable = [t for t in takes
               if t["speaker"] == speaker and t["voiced_s"] >= min_voiced_s]
-    # Longest first, so a clip is made of as few pieces as will do. Every join
-    # is a place the splice can be heard.
+    if not usable:
+        return []
+
+    # One take that fits beats a much longer one. A 20 second take and a 9
+    # second take both clear an 8 second target, and taking the 20 produced a
+    # 51 second clip. Only the extra beyond the target gets trimmed away, so
+    # the tightest fit wastes the least.
+    enough = [t for t in usable if t["voiced_s"] >= target_s]
+    if enough:
+        return [min(enough, key=lambda t: t["voiced_s"])]
+
+    # Nothing is long enough alone, so join. Longest first, since every join is
+    # a place the splice can be heard.
     usable.sort(key=lambda t: -t["voiced_s"])
 
     chosen, total = [], 0.0
@@ -191,17 +381,30 @@ def decode(path, rate=DECODE_RATE):
     return samples, rate
 
 
-def splice(paths, out_path, rate=PUBLISH_RATE, lufs=PUBLISH_LUFS):
-    """Join takes end to end, normalise loudness, strip metadata."""
+def splice(parts, out_path, rate=PUBLISH_RATE, lufs=PUBLISH_LUFS):
+    """Cut each part to its span, join them, normalise loudness, strip metadata.
+
+    `parts` is [(path, start_s, end_s)]. Every clip is encoded to identical
+    specs with metadata removed, so the file itself gives nothing away: no
+    duration tell, no bitrate tell, nothing in the tags.
+    """
     require_ffmpeg()
     args = ["ffmpeg", "-v", "error", "-y"]
-    for path in paths:
+    for path, _start, _end in parts:
         args += ["-i", str(path)]
-    joined = "".join(f"[{i}:a]" for i in range(len(paths)))
+
+    chain = []
+    for i, (_path, start, end) in enumerate(parts):
+        chain.append(
+            f"[{i}:a]atrim=start={start:.3f}:end={end:.3f},"
+            f"asetpts=PTS-STARTPTS,aresample={rate}[t{i}]"
+        )
+    joined = "".join(f"[t{i}]" for i in range(len(parts)))
+    chain.append(f"{joined}concat=n={len(parts)}:v=0:a=1[c]")
+    chain.append(f"[c]loudnorm=I={lufs}:TP=-1.5:LRA=11[out]")
+
     args += [
-        "-filter_complex",
-        f"{joined}concat=n={len(paths)}:v=0:a=1[a];"
-        f"[a]loudnorm=I={lufs}:TP=-1.5:LRA=11[out]",
+        "-filter_complex", ";".join(chain),
         "-map", "[out]", "-ac", "1", "-ar", str(rate),
         "-map_metadata", "-1", str(out_path),
     ]
@@ -244,69 +447,138 @@ def audit(takes, target_s=TARGET_VOICED_S, min_voiced_s=MIN_VOICED_S):
     return sorted(out, key=lambda r: -r["takes"])
 
 
-def main():
-    ap = argparse.ArgumentParser(
-        description="Measure voiced seconds and report how many finished clips "
-                    "a set of recordings could make.",
-    )
-    ap.add_argument("paths", nargs="+", help="audio files, or directories of them")
-    ap.add_argument("--manifest", help="TSV with file, speaker and a label column")
-    ap.add_argument("--label", default="accent", help="manifest column to group by")
-    ap.add_argument("--min-voiced", type=float, default=MIN_VOICED_S)
-    ap.add_argument("--target", type=float, default=TARGET_VOICED_S)
-    args = ap.parse_args()
+def read_manifest(path, label_field):
+    import csv
+    with open(path, encoding="utf-8") as fh:
+        return [dict(row, label=row.get(label_field, "")) for row in
+                csv.DictReader(fh, delimiter="\t")]
 
-    meta = {}
-    if args.manifest:
-        import csv
-        with open(args.manifest, encoding="utf-8") as fh:
-            for row in csv.DictReader(fh, delimiter="\t"):
-                meta[row["file"]] = row
 
-    files = []
-    for path in args.paths:
-        if os.path.isdir(path):
-            for root, _dirs, names in os.walk(path):
-                files += [os.path.join(root, n) for n in sorted(names)
-                          if not n.startswith(".") and not n.endswith(".tsv")]
-        else:
-            files.append(path)
-
-    takes, duration, voiced_total = [], 0.0, 0.0
-    for path in files:
+def survey(root, manifest, label_field, giveaways):
+    """Measure and screen every take named in a manifest."""
+    rows = read_manifest(manifest, label_field)
+    takes = []
+    for row in rows:
+        path = os.path.join(root, row["file"])
+        if not os.path.exists(path):
+            continue
         try:
             samples, rate = decode(path)
         except (subprocess.CalledProcessError, ValueError, EOFError):
-            sys.stderr.write(f"  {os.path.basename(path):<40} not audio\n")
             continue
-        name = os.path.basename(path)
-        row = meta.get(name, {})
-        voiced = voiced_seconds(samples, rate)
-        duration += len(samples) / rate
-        voiced_total += voiced
-        takes.append({"id": name, "speaker": row.get("speaker") or name,
-                      "label": row.get(args.label, ""), "voiced_s": voiced})
+        segments = voiced_segments(samples, rate)
+        takes.append({
+            "id": row["file"], "path": path, "speaker": row.get("speaker") or row["file"],
+            "label": row.get("label", ""), "duration": len(samples) / rate,
+            "segments": segments,
+            "voiced_s": sum(e - s for s, e in segments),
+            "rejected": screen(row.get("text", ""), giveaways),
+        })
+    return takes
 
+
+def build_clips(takes, out_dir, target_s=TARGET_VOICED_S, min_voiced_s=MIN_VOICED_S,
+                per_label=None):
+    """Make finished clips, longest-first within a speaker, and record provenance."""
+    import collections
+
+    usable = [t for t in takes if not t["rejected"] and t["voiced_s"] >= min_voiced_s]
+    by_label = collections.defaultdict(list)
+    for take in usable:
+        by_label[take["label"]].append(take)
+
+    os.makedirs(out_dir, exist_ok=True)
+    built = []
+    for label, items in sorted(by_label.items()):
+        made = 0
+        for speaker in sorted({t["speaker"] for t in items}):
+            remaining = [t for t in items if t["speaker"] == speaker]
+            while per_label is None or made < per_label:
+                plan = plan_splice(remaining, speaker, target_s, min_voiced_s)
+                if not plan:
+                    break
+                parts, budget = [], target_s
+                for take in plan:
+                    span = trim_to_voiced(take["segments"], budget,
+                                          duration=take["duration"])
+                    if span:
+                        parts.append((take["path"], span[0], span[1]))
+                        budget -= take["voiced_s"]
+                if not parts:
+                    break
+                name = clip_id(parts)
+                splice(parts, os.path.join(out_dir, f"{name}.opus"))
+                built.append({
+                    "clip": name, "label": label, "speaker": speaker,
+                    "parts": len(parts),
+                    "voiced_s": round(sum(t["voiced_s"] for t in plan), 2),
+                    "sources": " ".join(t["id"] for t in plan),
+                })
+                made += 1
+                used = {t["id"] for t in plan}
+                remaining = [t for t in remaining if t["id"] not in used]
+            if per_label is not None and made >= per_label:
+                break
+    return built
+
+
+def main():
+    ap = argparse.ArgumentParser(
+        description="Measure, screen and assemble clips from a corpus.")
+    ap.add_argument("root", help="directory of audio")
+    ap.add_argument("--manifest", required=True,
+                    help="TSV with file, speaker, text and a label column")
+    ap.add_argument("--label", default="accent", help="manifest column to group by")
+    ap.add_argument("--build", metavar="DIR",
+                    help="assemble clips into DIR instead of only reporting")
+    ap.add_argument("--per-label", type=int, default=None,
+                    help="stop after this many clips per label")
+    ap.add_argument("--min-voiced", type=float, default=MIN_VOICED_S)
+    ap.add_argument("--target", type=float, default=TARGET_VOICED_S)
+    ap.add_argument("--no-screen", action="store_true",
+                    help="skip the transcript screen")
+    args = ap.parse_args()
+
+    giveaways = () if args.no_screen else load_giveaways()
+    takes = survey(args.root, args.manifest, args.label, giveaways)
     if not takes:
         sys.stderr.write("no audio read\n")
         return 1
 
+    duration = sum(t["duration"] for t in takes)
+    voiced = sum(t["voiced_s"] for t in takes)
+    screened = sum(1 for t in takes if t["rejected"])
     sys.stderr.write(
-        f"\n{len(takes)} recordings, {len({t['speaker'] for t in takes})} speakers, "
-        f"{duration / 60:.0f} min audio, {voiced_total / 60:.0f} min voiced "
-        f"({voiced_total / duration:.0%})\n\n"
+        f"\n{len(takes)} takes, {len({t['speaker'] for t in takes})} speakers, "
+        f"{duration / 60:.0f} min audio, {voiced / 60:.0f} min voiced "
+        f"({voiced / duration:.0%}), {screened} screened out\n\n"
     )
-    header = f"  {'label':<30}{'n':>4}{'spk':>5}{'med voiced':>12}{'usable':>8}{'clips':>7}\n"
-    sys.stderr.write(header)
-    for row in audit(takes, args.target, args.min_voiced):
+
+    rows = audit([t for t in takes if not t["rejected"]], args.target, args.min_voiced)
+    sys.stderr.write(
+        f"  {'label':<30}{'n':>4}{'spk':>5}{'med voiced':>12}{'usable':>8}{'clips':>7}\n")
+    for row in rows:
         sys.stderr.write(
             f"  {row['label'][:29]:<30}{row['takes']:>4}{row['speakers']:>5}"
             f"{row['median_voiced_s']:>11.1f}s{row['usable'] / row['takes']:>8.0%}"
-            f"{row['clips']:>7}\n"
-        )
-    total = sum(r["clips"] for r in audit(takes, args.target, args.min_voiced))
-    sys.stderr.write(f"\n{total} clips of {args.target:.0f} voiced seconds\n")
-    return 0 if total else 1
+            f"{row['clips']:>7}\n")
+    sys.stderr.write(f"\n{sum(r['clips'] for r in rows)} clips available at "
+                     f"{args.target:.0f} voiced seconds\n")
+
+    if args.build:
+        import csv
+        built = build_clips(takes, args.build, args.target, args.min_voiced,
+                            args.per_label)
+        record = os.path.join(args.build, "clips.tsv")
+        with open(record, "w", newline="", encoding="utf-8") as fh:
+            writer = csv.DictWriter(
+                fh, fieldnames=["clip", "label", "speaker", "parts", "voiced_s", "sources"],
+                delimiter="\t", lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(built)
+        sys.stderr.write(f"\nbuilt {len(built)} clips into {args.build}\n")
+        sys.stderr.write(f"provenance in {record}\n")
+    return 0
 
 
 if __name__ == "__main__":

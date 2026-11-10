@@ -13,3 +13,6 @@ data/footprints.geojson
 
 # Generated, and large. Rebuild with: python3 -m pipeline.weights
 data/density.json
+
+# Built clips, regenerate with: python3 -m pipeline.clips
+.cache/clips/

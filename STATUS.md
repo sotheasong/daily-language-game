@@ -171,14 +171,25 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
 
 ## Next
 
-1. **Clip pipeline**, in progress on branch `clip-pipeline`. Voiced seconds,
-   splice planning and the EdAcc fetch and audit are written and tested there.
-   ffmpeg is installed as of 2026-11-09, so Common Voice's mp3 is reachable.
+1. **Clip pipeline**, on branch `clip-pipeline`. It now produces audio.
 
-   The audit found EdAcc covers 9 of the 17 accent entries and yields 185 clips
-   of 8 voiced seconds from 2.8% of the corpus, so volume is not the problem.
-   The other 7 accents and all 119 languages need Mozilla Data Collective
-   access, which is still the one unresolved dependency.
+   ```bash
+   python3 tools/fetch_edacc.py --per-split 264
+   python3 -m pipeline.clips .cache/edacc --manifest .cache/edacc/manifest.tsv \
+       --build .cache/clips --per-label 4
+   ```
+
+   Measures voiced seconds, screens transcripts, picks takes from one speaker,
+   trims each to the target, splices, normalises loudness to -18 LUFS, strips
+   metadata, and names each clip by a hash of its contents. Provenance goes to
+   `clips.tsv`, which matters because EdAcc is CC BY-SA.
+
+   First real build: 63 clips, 59 inside the 8 to 12 second spec, and measuring
+   the finished files back gives a median 8.2 voiced seconds against a target
+   of 8.0.
+
+   **Still needed:** Mozilla Data Collective access. EdAcc covers 9 of the 17
+   accent entries and none of the 119 languages.
 
 2. **The approval gate and review page**, so no session goes live unreviewed.
 3. **Name the game.** Open since the third design pass. It gates the domain.
