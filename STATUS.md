@@ -11,6 +11,25 @@ Last updated 2026-11-09.
 
 ---
 
+## Branches
+
+One branch per feature, from 2026-11-09. `sothea_mac` is the integration line
+and should always be green; work lands there by merge, not by committing
+straight to it.
+
+| Branch | Holds |
+|---|---|
+| `sothea_mac` | integration. The pool, footprints, weights, scoring, the reviewer. |
+| `clip-pipeline` | voiced seconds, splice planning, the EdAcc fetch and audit |
+| `footprint-refinements` | parked map work, see `REFINEMENTS.md` |
+
+Start one with `git switch -c <feature>` off `sothea_mac`. Merge back when the
+feature is finished and the suite is green.
+
+`main` is stale at an early commit and is not used.
+
+---
+
 ## The pipeline
 
 Five stages, each one gating the next. Stdlib only, no pip install.
