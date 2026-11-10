@@ -21,11 +21,13 @@ Stdlib only. No pip install.
 
 import argparse
 import array
+import io
 import math
 import os
 import shutil
 import subprocess
 import sys
+import wave
 
 # A source utterance below this is a word, not a sample of a language.
 MIN_VOICED_S = 2.0
@@ -143,8 +145,41 @@ def require_ffmpeg():
         )
 
 
+def decode_wav_bytes(blob):
+    """Read a WAV with the stdlib, mixing any channels down to mono.
+
+    EdAcc ships mono 32 kHz 16-bit WAV, so an audit of it needs nothing
+    installed. Measuring one channel of a stereo interview would count only
+    whichever speaker happened to be on the left.
+    """
+    with wave.open(io.BytesIO(blob)) as src:
+        channels = src.getnchannels()
+        width = src.getsampwidth()
+        rate = src.getframerate()
+        if width != 2:
+            raise ValueError(f"expected 16-bit WAV, got {width * 8}-bit")
+        frames = src.readframes(src.getnframes())
+    samples = array.array("h")
+    samples.frombytes(frames[: len(frames) - (len(frames) % (2 * channels))])
+    if channels == 1:
+        return samples, rate
+    mixed = array.array("h", [
+        sum(samples[i:i + channels]) // channels
+        for i in range(0, len(samples), channels)
+    ])
+    return mixed, rate
+
+
 def decode(path, rate=DECODE_RATE):
-    """Read any audio file as mono 16-bit samples at `rate`."""
+    """Read any audio file as mono 16-bit samples.
+
+    WAV goes through the stdlib at its own rate; anything else needs ffmpeg.
+    """
+    with open(path, "rb") as fh:
+        head = fh.read(12)
+    if head[:4] == b"RIFF" and head[8:12] == b"WAVE":
+        with open(path, "rb") as fh:
+            return decode_wav_bytes(fh.read())
     require_ffmpeg()
     out = subprocess.run(
         ["ffmpeg", "-v", "error", "-i", str(path),
@@ -153,7 +188,7 @@ def decode(path, rate=DECODE_RATE):
     ).stdout
     samples = array.array("h")
     samples.frombytes(out[: len(out) - (len(out) % 2)])
-    return samples
+    return samples, rate
 
 
 def splice(paths, out_path, rate=PUBLISH_RATE, lufs=PUBLISH_LUFS):
@@ -174,41 +209,104 @@ def splice(paths, out_path, rate=PUBLISH_RATE, lufs=PUBLISH_LUFS):
     return out_path
 
 
+def audit(takes, target_s=TARGET_VOICED_S, min_voiced_s=MIN_VOICED_S):
+    """Group takes by label and report how many finished clips each could make.
+
+    The number that matters is not hours of audio but finished clips: a corpus
+    of conversational turns is mostly too short to use one take at a time.
+    """
+    import collections
+    import statistics
+
+    grouped = collections.defaultdict(list)
+    for take in takes:
+        grouped[take.get("label") or ""].append(take)
+
+    out = []
+    for label, items in grouped.items():
+        usable = [t for t in items if t["voiced_s"] >= min_voiced_s]
+        made = 0
+        for speaker in {t["speaker"] for t in usable}:
+            remaining = [t for t in usable if t["speaker"] == speaker]
+            while True:
+                plan = plan_splice(remaining, speaker, target_s, min_voiced_s)
+                if not plan:
+                    break
+                made += 1
+                used = {t["id"] for t in plan}
+                remaining = [t for t in remaining if t["id"] not in used]
+        out.append({
+            "label": label, "takes": len(items),
+            "speakers": len({t["speaker"] for t in items}),
+            "median_voiced_s": statistics.median([t["voiced_s"] for t in items]),
+            "usable": len(usable), "clips": made,
+        })
+    return sorted(out, key=lambda r: -r["takes"])
+
+
 def main():
     ap = argparse.ArgumentParser(
-        description="Report voiced seconds for audio files, which is what the "
-                    "clip filter turns on.",
+        description="Measure voiced seconds and report how many finished clips "
+                    "a set of recordings could make.",
     )
     ap.add_argument("paths", nargs="+", help="audio files, or directories of them")
+    ap.add_argument("--manifest", help="TSV with file, speaker and a label column")
+    ap.add_argument("--label", default="accent", help="manifest column to group by")
     ap.add_argument("--min-voiced", type=float, default=MIN_VOICED_S)
+    ap.add_argument("--target", type=float, default=TARGET_VOICED_S)
     args = ap.parse_args()
+
+    meta = {}
+    if args.manifest:
+        import csv
+        with open(args.manifest, encoding="utf-8") as fh:
+            for row in csv.DictReader(fh, delimiter="\t"):
+                meta[row["file"]] = row
 
     files = []
     for path in args.paths:
         if os.path.isdir(path):
             for root, _dirs, names in os.walk(path):
                 files += [os.path.join(root, n) for n in sorted(names)
-                          if not n.startswith(".")]
+                          if not n.startswith(".") and not n.endswith(".tsv")]
         else:
             files.append(path)
 
-    kept = 0
+    takes, duration, voiced_total = [], 0.0, 0.0
     for path in files:
         try:
-            samples = decode(path)
-        except subprocess.CalledProcessError:
+            samples, rate = decode(path)
+        except (subprocess.CalledProcessError, ValueError, EOFError):
             sys.stderr.write(f"  {os.path.basename(path):<40} not audio\n")
             continue
-        total = len(samples) / DECODE_RATE
-        voiced = voiced_seconds(samples, DECODE_RATE)
-        verdict = "ok" if voiced >= args.min_voiced else "too thin"
-        kept += voiced >= args.min_voiced
+        name = os.path.basename(path)
+        row = meta.get(name, {})
+        voiced = voiced_seconds(samples, rate)
+        duration += len(samples) / rate
+        voiced_total += voiced
+        takes.append({"id": name, "speaker": row.get("speaker") or name,
+                      "label": row.get(args.label, ""), "voiced_s": voiced})
+
+    if not takes:
+        sys.stderr.write("no audio read\n")
+        return 1
+
+    sys.stderr.write(
+        f"\n{len(takes)} recordings, {len({t['speaker'] for t in takes})} speakers, "
+        f"{duration / 60:.0f} min audio, {voiced_total / 60:.0f} min voiced "
+        f"({voiced_total / duration:.0%})\n\n"
+    )
+    header = f"  {'label':<30}{'n':>4}{'spk':>5}{'med voiced':>12}{'usable':>8}{'clips':>7}\n"
+    sys.stderr.write(header)
+    for row in audit(takes, args.target, args.min_voiced):
         sys.stderr.write(
-            f"  {os.path.basename(path):<40} {total:>6.1f}s file  "
-            f"{voiced:>6.1f}s voiced  {voiced / total if total else 0:>5.0%}  {verdict}\n"
+            f"  {row['label'][:29]:<30}{row['takes']:>4}{row['speakers']:>5}"
+            f"{row['median_voiced_s']:>11.1f}s{row['usable'] / row['takes']:>8.0%}"
+            f"{row['clips']:>7}\n"
         )
-    sys.stderr.write(f"\n{kept} of {len(files)} clear {args.min_voiced}s voiced\n")
-    return 0 if kept else 1
+    total = sum(r["clips"] for r in audit(takes, args.target, args.min_voiced))
+    sys.stderr.write(f"\n{total} clips of {args.target:.0f} voiced seconds\n")
+    return 0 if total else 1
 
 
 if __name__ == "__main__":

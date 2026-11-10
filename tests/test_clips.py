@@ -100,5 +100,47 @@ class PlanSplice(unittest.TestCase):
         self.assertLessEqual(len(got), 2)
 
 
+class WavDecoding(unittest.TestCase):
+    """WAV is read with the stdlib, so an audit needs nothing installed.
+
+    EdAcc ships mono 32 kHz 16-bit WAV. ffmpeg is still the general path, for
+    Common Voice's mp3 and anything else, but requiring it to measure a WAV
+    would block the audit on an install for no reason.
+    """
+
+    def _wav_bytes(self, samples, rate=RATE):
+        import array
+        import io
+        import wave
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as out:
+            out.setnchannels(1)
+            out.setsampwidth(2)
+            out.setframerate(rate)
+            out.writeframes(array.array("h", samples).tobytes())
+        return buf.getvalue()
+
+    def test_a_wav_round_trips_through_the_stdlib(self):
+        samples = tone(0.5)
+        got, rate = clips.decode_wav_bytes(self._wav_bytes(samples))
+        self.assertEqual(rate, RATE, "the file's own rate comes back with it")
+        self.assertEqual(len(got), len(samples))
+        self.assertEqual(list(got[:8]), samples[:8])
+
+    def test_stereo_is_mixed_down(self):
+        # A round clip is mono. Measuring one channel of a stereo interview
+        # would count only the speaker who happened to be on the left.
+        import array, io, wave
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as out:
+            out.setnchannels(2)
+            out.setsampwidth(2)
+            out.setframerate(RATE)
+            out.writeframes(array.array("h", [1000, 3000] * 100).tobytes())
+        got, _rate = clips.decode_wav_bytes(buf.getvalue())
+        self.assertEqual(len(got), 100)
+        self.assertEqual(got[0], 2000)
+
+
 if __name__ == "__main__":
     unittest.main()
