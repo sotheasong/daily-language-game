@@ -300,6 +300,9 @@ def main():
     ap.add_argument("--overlaps", default=DEFAULT_OVERLAPS)
     ap.add_argument("--clips", default=DEFAULT_CLIPS)
     ap.add_argument("--out", default=DEFAULT_SCHEDULE)
+    ap.add_argument("--rejections", default=os.path.join(sources.DATA_DIR,
+                                                        "rejections.json"),
+                    help="clips rejected at review, never proposed again")
     ap.add_argument("--window", type=int, default=WINDOW_DAYS,
                     help=f"days an entry and a clip rest (default {WINDOW_DAYS})")
     ap.add_argument("--seed", type=int, default=0)
@@ -319,6 +322,16 @@ def main():
         return 1
     clips = read_clips(args.clips)
 
+    # A rejected clip must never be proposed again, or the generator offers it
+    # on a different date tomorrow. Imported here rather than at module scope
+    # because approvals imports this module for the content hash.
+    from pipeline import approvals
+    rejected = approvals.rejected_clips(approvals.load_rejections(args.rejections))
+    if rejected:
+        clips = {name: [c for c in hashes if c not in rejected]
+                 for name, hashes in clips.items()}
+        clips = {name: hashes for name, hashes in clips.items() if hashes}
+
     # Keep days already proposed or approved that fall before the new run, so
     # the window is enforced against them.
     history = []
@@ -331,7 +344,8 @@ def main():
 
     sys.stderr.write(
         f"{len(entries)} entries, {len(clips)} with audio, "
-        f"{sum(len(v) for v in clips.values())} clips, {len(forbidden)} forbidden pairs\n")
+        f"{sum(len(v) for v in clips.values())} clips, {len(forbidden)} forbidden pairs"
+        + (f", {len(rejected)} clips rejected\n" if rejected else "\n"))
     sys.stderr.write(f"proposed {len(days)} of {args.days} days from {start}\n\n")
 
     if len(days) < args.days:
