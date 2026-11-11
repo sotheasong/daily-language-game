@@ -1,0 +1,139 @@
+# Common Voice locales to pull, one per pool entry.
+#
+# Matched against cv-corpus-27.0 (2026-09-11): 295 locales, 29,295 validated
+# hours. 100 of the 119 language entries have a locale. The 19 that do not are
+# listed at the bottom.
+#
+# **The constraint is speakers, not hours.** An entry needs 4 clips of about 8
+# voiced seconds, which is maybe 40 utterances, and even 0.3 validated hours is
+# roughly 200 prompts. What a thin locale cannot give is *different voices*:
+# four clips cut from two speakers is a tell a regular player would learn.
+#
+#   plenty     50+ speakers, take what you need
+#   workable   20 to 49, fine with care over which speakers are used
+#   thin       5 to 19, expect to reuse voices, consider another source
+#   empty      under 5, not usable
+#
+# Pull small. 40 utterances per locale is ample and tens of GB is waste.
+input_name	tier	locale	status	speakers	valid_hours	alternates
+German	1	de	plenty	20558	1394.8	
+French	1	fr	plenty	21116	1108.3	
+Spanish	1	es	plenty	26960	597.6	
+Swahili	1	sw	plenty	1525	392.2	
+Japanese	1	ja	plenty	7852	372.6	
+Italian	1	it	plenty	7350	363.9	
+Russian	1	ru	plenty	3767	256.8	
+Mandarin	1	zh-CN	plenty	7601	240.1	zh-TW
+Cantonese	1	yue	plenty	1188	210.8	zh-HK
+Portuguese	1	pt	plenty	3860	188.8	
+Polish	1	pl	plenty	3477	177.0	
+Thai	1	th	plenty	7997	173.4	
+Turkish	1	tr	plenty	1840	130.2	
+Dutch	1	nl	plenty	1892	126.5	
+Arabic	1	ar	plenty	1679	93.3	
+Swedish	1	sv-SE	plenty	891	47.8	
+Greek	1	el	plenty	456	20.3	
+Hindi	1	hi	plenty	485	15.7	
+Vietnamese	1	vi	plenty	419	7.8	
+Hebrew	1	he	plenty	60	5.3	
+Korean	1	ko	plenty	213	2.6	
+Pashto	2	ps	plenty	8429	3530.2	
+Catalan	2	ca	plenty	36990	3392.4	
+Belarusian	2	be	plenty	8624	1818.9	
+Basque	2	eu	plenty	11056	472.8	
+Persian	2	fa	plenty	4668	373.1	
+Galician	2	gl	plenty	6611	332.9	
+Latvian	2	lv	plenty	6563	267.4	
+Georgian	2	ka	plenty	3149	262.2	
+Tamil	2	ta	plenty	984	234.8	
+Hungarian	2	hu	plenty	1683	139.1	
+Welsh	2	cy	plenty	1938	124.2	
+Ukrainian	2	uk	plenty	1181	108.8	
+Czech	2	cs	plenty	1146	81.6	
+Urdu	2	ur	plenty	506	79.8	
+Slovak	2	sk	plenty	274	56.8	
+Bengali	2	bn	plenty	23019	54.4	
+Estonian	2	et	plenty	1127	53.0	
+Mongolian	2	mn	plenty	616	45.9	
+Armenian	2	hy-AM	plenty	1084	39.5	
+Lithuanian	2	lt	plenty	335	34.4	
+Indonesian	2	id	plenty	678	34.2	
+Macedonian	2	mk	plenty	469	26.2	
+Romanian	2	ro	plenty	464	25.4	
+Marathi	2	mr	plenty	107	18.9	
+Bulgarian	2	bg	plenty	155	17.7	
+Slovenian	2	sl	plenty	1006	17.4	
+Finnish	2	fi	plenty	253	15.8	
+Irish	2	ga-IE	plenty	282	14.4	
+Danish	2	da	plenty	302	13	
+Albanian	2	sq	plenty	155	9	
+Maltese	2	mt	plenty	225	8.8	
+Serbian	2	sr	plenty	187	7.6	
+Yoruba	2	yo	plenty	138	6.0	
+Hausa	2	ha	plenty	64	4.3	
+Malayalam	2	ml	plenty	158	4.1	
+Igbo	2	ig	plenty	188	2.9	
+Norwegian	2	nb-NO	plenty	68	2.4	nn-NO
+Punjabi	2	pa-IN	plenty	75	2.4	
+Yiddish	2	yi	plenty	128	2.1	
+Amharic	2	am	plenty	56	1.9	
+Nepali	2	ne-NP	plenty	64	1.4	
+Telugu	2	te	plenty	75	0.9	
+Afrikaans	2	af	plenty	70	0.8	
+Malay	2	ms	plenty	57	0.2	
+Khmer	2	km	thin	15	0.3	
+Lao	2	lo	thin	16	0.3	
+Icelandic	2	is	thin	8	0.2	
+Zulu	2	zu	thin	9	0.0	
+Croatian	2	hr	empty	2	0.0	
+Kinyarwanda	3	rw	plenty	1187	2001.7	
+Kabyle	3	kab	plenty	1608	571.7	
+Uyghur	3	ug	plenty	1862	462.5	
+Luganda	3	lg	plenty	672	437.0	
+Meadow Mari	3	mhr	plenty	500	280.9	
+Bashkir	3	ba	plenty	930	258.8	
+Abkhaz	3	ab	plenty	1303	207.8	
+Uzbek	3	uz	plenty	2318	101.6	
+West Frisian	3	fy-NL	plenty	2106	71.7	
+Kyrgyz	3	ky	plenty	301	39.0	
+Breton	3	br	plenty	299	35.4	
+Tatar	3	tt	plenty	299	32.6	
+Chuvash	3	cv	plenty	122	24.5	
+Aragonese	3	an	plenty	53	16.9	
+Sakha	3	sah	plenty	256	16.3	
+Tigrinya	3	tig	plenty	153	10.7	ti
+Romansh	3	rm-sursilv	plenty	93	7.9	rm-vallader
+Turkmen	3	tk	plenty	151	3.1	
+Sardinian	3	sc	plenty	50	3.0	
+Occitan	3	oc	plenty	149	2.7	
+Kazakh	3	kk	plenty	206	2.5	
+Oromo	3	om	workable	40	25.9	
+Ossetian	3	os	workable	39	1.4	
+Asturian	3	ast	workable	34	1.1	
+Azerbaijani	3	az	workable	48	0.7	
+Twi	3	tw	workable	22	0.4	
+Erzya	3	myv	thin	13	3.2	
+Tajik	3	tg	thin	10	0.8	
+Quechua	3	quy	thin	8	0.1	
+Xhosa	3	xh	thin	5	0.0	
+
+# No Common Voice locale, need another source:
+#   T2 Burmese
+#   T2 Gujarati
+#   T2 Javanese
+#   T2 Kannada
+#   T2 Scottish Gaelic
+#   T2 Sinhala
+#   T2 Somali
+#   T2 Tagalog
+#   T3 Bambara
+#   T3 Cebuano
+#   T3 Chechen
+#   T3 Faroese
+#   T3 Komi
+#   T3 Luxembourgish
+#   T3 Northern Sami
+#   T3 Shona
+#   T3 Sundanese
+#   T3 Udmurt
+#   T3 Wolof

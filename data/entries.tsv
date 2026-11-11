@@ -1,4 +1,4 @@
-# Daily Language Game — base language entries. One per line: Name<TAB>tier
+# Daily Language Game, base language entries. One per line: Name<TAB>tier
 # Accent varieties are NOT listed here; they reuse their base language's
 # Glottocode with a variety suffix (see tech-stack.md entry record).
 # Esperanto deliberately absent: no geographic footprint, unscoreable.
@@ -24,7 +24,6 @@ Swedish	1
 Vietnamese	1
 Thai	1
 Swahili	1
-English	1
 Ukrainian	2
 Czech	2
 Slovak	2
@@ -123,3 +122,36 @@ Xhosa	3
 Cebuano	3
 Sundanese	3
 Quechua	3
+
+# --- Accent layer ---------------------------------------------------------
+# English varieties, added 2026-11-01. Glottolog models most of these as dialect
+# nodes of English [stan1293] with their own Glottocodes, so they resolve through
+# the same path as a language and need no suffix mechanism. Scottish English is
+# the exception and carries a local id, see data/local-ids.tsv.
+#
+# Only nativised varieties are here. A learner's accent (German-accented English,
+# Spanish-accented English) is excluded on purpose: guessing the speaker's first
+# language duplicates the language pool exactly and has no footprint of its own.
+#
+# Tier is geographic distinctiveness, so North American English sits in tier 3
+# despite being the most recognisable of the lot. Its footprint is a continent.
+# Bare "English" was narrowed to this on 2026-11-01. With the accent layer in
+# place its footprint was the whole anglosphere, 34 territories, which cannot be
+# scored. Southeastern English [sout3285] is southeast England including London.
+Southeastern English	1	accent
+Irish English	1	accent
+Scottish English	1	accent
+Indian English	1	accent
+Jamaican English	1	accent
+Australian English	1	accent
+Nigerian English	2	accent
+Southern African English	2	accent
+Philippine English	2	accent
+Singlish	2	accent
+New Zealand English	2	accent
+Welsh English	2	accent
+Kenyan English	3	accent
+Ghanaian English	3	accent
+Hong Kong English	3	accent
+Malaysian English	3	accent
+North American English	3	accent

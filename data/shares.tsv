@@ -1,0 +1,44 @@
+# Share of each language's speakers living in each country, relative numbers
+# normalised per row. This is what separates where a language is spoken from
+# where people happen to live.
+#
+# Only rows that need it are here. An entry left out is weighted by population
+# alone, which is right whenever one country holds nearly all the speakers:
+# Hindi is 100% India by population too, and German comes out DE 82 / AT 9 /
+# CH 5 without help. pipeline.weights flags an entry when a second country
+# takes 10% or more of the weight and no row exists here.
+#
+# THESE ARE ESTIMATES, not a cited source. No free dataset carries speakers per
+# country; Ethnologue does and is paywalled. They are good to the nearest ten
+# percent, which is all the scoring formula can use, since the weight only
+# modulates an inside-score by plus or minus 40 percent. Correct any that look
+# wrong on the reveal map, the effect is immediate.
+input_name	shares	note
+Khmer	KH:90 TH:6 VN:4	Northern Khmer in Isan is about 1.4M and Khmer Krom in the Mekong Delta about 1M, against roughly 16M in Cambodia. By population alone the Delta outweighs rural Cambodia.
+Lao	LA:72 TH:28	Isan speaks Lao varieties and outnumbers Laos itself, but the entry is Lao. By population alone Thailand took 59% and Vietnam 30%, the second of which is footprint bleed.
+French	FR:84 CA:8 BE:5 CH:2 LU:1	Haiti took 26% by population, but Haitians speak Haitian Creole; French there is an administrative second language.
+Korean	KR:66 KP:32 CN:2	China's Korean minority is about 2M, not the 35% population alone gave it.
+Swahili	TZ:55 KE:28 CD:12 UG:5	Tanzania is the heartland. Population alone put Kenya first.
+Somali	SO:64 ET:20 KE:11 DJ:5	Somalia is the heartland. Population alone put it third, behind Kenya and Ethiopia.
+Kazakh	KZ:86 CN:9 UZ:3 MN:2	China's Kazakhs are about 1.5M against roughly 13M in Kazakhstan. Population alone gave China 59%.
+Kyrgyz	KG:86 TJ:5 UZ:5 CN:4	Population alone gave China 43%.
+Tajik	TJ:85 UZ:10 AF:5	China took 35% by population, which is footprint bleed into Xinjiang.
+Uzbek	UZ:88 AF:9 TJ:2 KZ:1	Afghanistan has roughly 3M Uzbek speakers against 27M in Uzbekistan.
+Turkmen	TM:85 IR:8 AF:7	
+Occitan	FR:95 IT:3 ES:2	Population alone gave Italy 99%, which is wrong by an order of magnitude. Occitan is southern France, with the Occitan Valleys in Piedmont and Aran in Spain.
+Ossetian	RU:85 GE:15	North Ossetia holds roughly 450k against about 50k in South Ossetia. Population alone reversed it.
+Basque	ES:93 FR:7	The French Basque Country has roughly 50k speakers against about 700k in Spain.
+Hungarian	HU:88 RO:10 SK:2	Romania's Hungarian minority is roughly 1.2M against 9.5M in Hungary.
+Mongolian	MN:90 CN:10	The entry resolves to Halh Mongolian, which is Mongolia's. Inner Mongolia speaks other varieties.
+Malay	MY:85 SG:5 BN:5 TH:5	
+Hebrew	IL:97 PS:3	
+Dutch	NL:70 BE:28 SR:2	Flanders holds roughly 6.5M against 17M in the Netherlands.
+Russian	RU:92 KZ:5 BY:2 KG:1	China took 5% by population, which is footprint bleed.
+Wolof	SN:88 GM:9 MR:3	
+Kinyarwanda	RW:92 CD:5 UG:3	Uganda took 20% by population.
+Albanian	AL:62 XK:28 MK:10	
+Southern African English	ZA:90 ZW:7 NA:3	
+Urdu	PK:60 IN:40	Pakistan has fewer first-language speakers than India but it is the national language there, and it is where a player should pin.
+Romansh	CH:100	Switzerland only.
+Nepali	NP:88 IN:12	
+Tigrinya	ER:52 ET:48	Roughly even. Tigray holds about 5M, Eritrea about 3M, but Tigrinya is Eritrea's working language.

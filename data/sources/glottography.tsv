@@ -1,0 +1,52 @@
+# Glottography language-area datasets, one row per CLDF languages.csv.
+# Adding a dataset is adding a row here. Nothing in the code names a dataset.
+#
+# These are the small index files, not the polygons. Each row's languages.csv
+# lists which Glottocodes the dataset draws, which geojson file holds each one
+# (Speaker_Area) and which features (Feature_IDs). Total about 2.4 MB, against
+# roughly 400 MB for the geojson, so coverage can be answered without them.
+#
+#
+# All Glottography datasets are CC BY 4.0. Re-check before launch, per dataset.
+# kind, and why it decides which dataset wins:
+#   language-area   contemporary attested speech areas, the ones we want
+#   historical-area attested but a dated snapshot, Grierson 1903, Wurm 1981
+#   country-shape   national outlines, right for a political standard only
+#   reconstructed   ancestral ranges inferred from phylogenetics or archaeology
+#
+# reconstructed ranks LAST, below even country outlines. DiACL's Yiddish is a blob
+# in eastern Poland, the pre-war heartland, which is not where Yiddish is spoken
+# now. A modern border is closer to the truth than an ancestral range for a game
+# that asks where a language is spoken today. Any entry that still lands on
+# reconstructed or country-shape data is flagged for review in footprints.geojson.
+dataset	layer	kind	licence	url
+allen2016resource		reconstructed	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/allen2016resource/main/cldf/languages.csv
+asher2007world	contemporary	language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/asher2007world/main/cldf/contemporary/languages.csv
+asher2007world	traditional	historical-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/asher2007world/main/cldf/traditional/languages.csv
+bouckaert2012indoeuropean		reconstructed	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/bouckaert2012indoeuropean/main/cldf/languages.csv
+bowern2012pamanyungan		reconstructed	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/bowern2012pamanyungan/main/cldf/languages.csv
+bowern2021australia		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/bowern2021australia/main/cldf/languages.csv
+carling2025diacl		reconstructed	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/carling2025diacl/main/cldf/languages.csv
+dedio2019britain		historical-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/dedio2019britain/main/cldf/languages.csv
+denevan1966aboriginal		historical-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/denevan1966aboriginal/main/cldf/languages.csv
+edwards2020metathesis		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/edwards2020metathesis/main/cldf/languages.csv
+eriksen2011nature		reconstructed	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/eriksen2011nature/main/cldf/languages.csv
+figueira1982atlastotalargentina		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/figueira1982atlastotalargentina/main/cldf/languages.csv
+goddard1999native		historical-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/goddard1999native/main/cldf/languages.csv
+grierson1903lsi		historical-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/grierson1903lsi/main/cldf/languages.csv
+haynie2019modern		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/haynie2019modern/main/cldf/languages.csv
+hochstetler2004sociolinguistic		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/hochstetler2004sociolinguistic/main/cldf/languages.csv
+matsumae2021exploring		reconstructed	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/matsumae2021exploring/main/cldf/languages.csv
+messineo2011aproximacion		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/messineo2011aproximacion/main/cldf/languages.csv
+ministerio2009pueblos		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/ministerio2009pueblos/main/cldf/languages.csv
+queixalos2000linguas		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/queixalos2000linguas/main/cldf/languages.csv
+rantanen2021uralic		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/rantanen2021uralic/main/cldf/languages.csv
+schapper2020papuan		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/schapper2020papuan/main/cldf/languages.csv
+steever2019dravidian		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/steever2019dravidian/main/cldf/languages.csv
+suttles1985northwest		historical-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/suttles1985northwest/main/cldf/languages.csv
+tarble1984nuevos		reconstructed	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/tarble1984nuevos/main/cldf/languages.csv
+vuillermet2012grammar		language-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/vuillermet2012grammar/main/cldf/languages.csv
+walker2011bayesian		reconstructed	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/walker2011bayesian/main/cldf/languages.csv
+wikipedia2024officiallang		country-shape	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/wikipedia2024officiallang/main/cldf/languages.csv
+wurm1981pacific		historical-area	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/wurm1981pacific/main/cldf/languages.csv
+zucchi2017arqueologia		reconstructed	CC-BY-4.0	https://raw.githubusercontent.com/Glottography/zucchi2017arqueologia/main/cldf/languages.csv

@@ -1,0 +1,58 @@
+# Hand-authored territory and footprint spec for entries Glottolog or
+# Glottography leaves short. Most rows are entries with no language-area
+# polygon. A few have a polygon but no country data, and are here so the
+# overlap report can still see where they are.
+# Adding an entry here is the decision that it gets an admin boundary instead of
+# a language area. Run pipeline.coverage first; it prints exactly who needs a row.
+#
+# territory: ISO 3166-1 alpha-2, or ISO 3166-2 where a country subdivision is the
+# real footprint. Space-separated, most important first. These are also what
+# pipeline.overlaps uses to find entries that must not share a session.
+#
+# boundary: admin-0 (Natural Earth countries), admin-1 (Natural Earth states and
+# provinces) or gisco (Eurostat NUTS, which has the Spanish communities).
+# These four have language-area polygons already. They are here only because
+# Glottolog's country list for them is "GB", which cannot tell Scotland from
+# Wales and made the overlap report collide every British entry with every other.#
+# selector: how to cut the polygon out of Natural Earth, as key=value pairs
+# matched against feature properties, with | meaning or. admin0 is
+# ne_50m_admin_0_countries, admin1 is ne_10m_admin_1_states_provinces, which is
+# province level, so regions are selected by its region or gu_a3 fields rather
+# than by an ISO subdivision code. Empty selector means Glottography already
+# draws this entry and the row exists only to give the overlap report a
+# territory Glottolog left blank or too coarse.
+input_name	territory	boundary	selector	review	note
+Albanian	AL XK MK			approved 2026-11-02	DiACL, but checked by eye: Albania, Kosovo and western North Macedonia, which is right.
+Arabic	MA DZ TN LY EG SD MR SA YE OM AE QA BH KW IQ SY JO LB PS	admin-0	admin0 ISO_A2=MA|DZ|TN|LY|EG|SD|MR|SA|YE|OM|AE|QA|BH|KW|IQ|SY|JO|LB|PS		The official-languages outline added Somalia, Djibouti, Comoros, Eritrea and Chad, where Arabic is official but not the mother tongue. This is the belt where it is.
+Aragonese	ES-AR	gisco	admin1 iso_a2=ES region=Aragón		Northern Aragon, mainly Huesca. The southern half of the community is Spanish-speaking, so weight the north.
+Armenian	AM	admin-0	admin0 ISO_A2=AM		The entry resolves to Eastern Armenian. Bouckaert had a second blob near Istanbul, which is Western Armenian territory and historical at that.
+Asturian	ES-AS	gisco	admin1 iso_a2=ES region=Asturias		Asturias. Glottolog has no country data for this node at all, being a dialect of Asturian-Leonese-Cantabrian.
+Australian English	AU	admin-0	admin0 ISO_A2=AU		Australia. Population-weighted hard, since the interior is empty.
+Azerbaijani	AZ	admin-0	admin0 ISO_A2=AZ		The entry resolves to North Azerbaijani, the republic. DiACL's polygon also covered Iranian Azerbaijan, which is South Azerbaijani and a different entry.
+Croatian	HR	admin-0	admin0 ISO_A2=HR		Croatian is co-official in Bosnia, so the official-languages outline covered it too. Croatia is where a player should pin.
+Galician	ES-GA	gisco	admin1 iso_a2=ES region=Galicia		Galicia. Fringes of Asturias, Leon, Zamora and Extremadura are also Galician-speaking and can be added as lower-weight polygons.
+Ghanaian English	GH	admin-0	admin0 ISO_A2=GH		Ghana.
+Hong Kong English	HK	admin-0	admin0 ISO_A2=HK		Hong Kong. The one English dialect node Glottolog gives its own coordinate.
+Indian English	IN	admin-0	admin0 ISO_A2=IN		India. Urban-weighted, since Indian English is a city and education variety rather than an evenly spread one.
+Indonesian	ID			approved 2026-11-02	Rests on the official-languages outline, and for a national language the national outline is the speech area. Checked by eye, it is the archipelago.
+Irish	IE GB-NIR	glottography			Ireland. The living Gaeltacht is the western fringe, which the polygon carries and this row does not.
+Irish English	IE GB-NIR	glottography			The Britain and Ireland atlas draws this one directly, so the polygon exists. Territory is recorded here only so pipeline.overlaps can see it, since Glottolog gives the node no country data. The atlas is historical, so eyeball the shape before using it.
+Jamaican English	JM	admin-0	admin0 ISO_A2=JM		Jamaica.
+Kenyan English	KE	admin-0	admin0 ISO_A2=KE		Kenya.
+Malaysian English	MY	admin-0	admin0 ISO_A2=MY		Malaysia.
+New Zealand English	NZ	admin-0	admin0 ISO_A2=NZ		New Zealand.
+Nigerian English	NG	admin-0	admin0 ISO_A2=NG		Nigeria.
+North American English	US CA	admin-0	admin0 ISO_A2=US|CA		United States and Canada. The largest footprint in the pool, so population weighting is doing all the work here.
+Ossetian	GE RU			approved 2026-11-02	DiACL, but checked by eye: North and South Ossetia, which is right for Iron Ossetian.
+Philippine English	PH	admin-0	admin0 ISO_A2=PH		Philippines.
+Quechua	PE-CUS PE-APU PE-AYA PE-PUN PE-ARE	admin-1	admin1 iso_3166_2=PE-CUS|PE-APU|PE-AYA|PE-PUN|PE-ARE		The entry resolves to Cusco Quechua, not Quechuan as a family. DiACL drew the whole Andean spine from Ecuador to Bolivia, which is every Quechuan variety at once.
+Sardinian	IT			approved 2026-11-02	DiACL, but checked by eye: the Logudorese area of central and northern Sardinia, which matches the variety the entry resolves to.
+Scottish English	GB-SCT	admin-1	admin1 iso_a2=GB gu_a3=SCT		Scotland. Carries local id stan1293-scotland, see data/local-ids.tsv.
+Scottish Gaelic	GB-SCT	glottography			Hebrides and the western Highlands, not all of Scotland. The polygon is the real shape, this row is only for territory comparison.
+Serbian	RS ME	admin-0	admin0 ISO_A2=RS|ME		Serbia and Montenegro. Republika Srpska is genuinely Serbian-speaking but admin-0 Bosnia would take the Federation with it, so it is left out until there is a sub-national cut.
+Singlish	SG	admin-0	admin0 ISO_A2=SG		Singapore. Tiny footprint, so almost any pin in Southeast Asia scores on distance rather than containment.
+Southeastern English	GB-ENG	gisco	admin1 iso_a2=GB region=Greater London|South East|East		Southeast England including London. Cut from NUTS-1 UKI (London), UKJ (South East) and UKH (East of England) rather than all of England. The ISO code here is GB-ENG only so the overlap report can compare it against Scotland and Wales, which it correctly does not touch.
+Southern African English	ZA ZW NA	admin-0	admin0 ISO_A2=ZA|ZW|NA		South Africa, Zimbabwe and Namibia, weighted toward South Africa. Glottolog's node covers all three.
+Welsh	GB-WLS	glottography			Wales. Glottolog also lists AR for the Patagonian settlement at Y Wladfa, a few hundred speakers, left out here so it does not collide with South American entries. Add it as a very low weight polygon if wanted.
+Welsh English	GB-WLS	admin-1	admin1 iso_a2=GB gu_a3=WLS		Wales. Distinct from Welsh itself, which concentrates in the north and west.
+Yiddish	US-NY IL BE-VAN	admin-1	admin1 iso_3166_2=US-NY|BE-VAN|IL-JM|IL-TA		DiACL draws the pre-war heartland in eastern Poland, which is not where Yiddish is spoken now. Today it is Haredi communities: New York, Jerusalem, Tel Aviv with Bnei Brak, and Antwerp. London and Montreal are the next two to add.

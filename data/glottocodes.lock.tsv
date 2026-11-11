@@ -1,0 +1,137 @@
+input_name	glottocode	matched_name
+French	stan1290	French
+Spanish	stan1288	Spanish
+Italian	ital1282	Italian
+German	stan1295	German
+Portuguese	port1283	Portuguese
+Russian	russ1263	Russian
+Mandarin	mand1415	Mandarin Chinese
+Cantonese	yuec1235	Yue Chinese
+Japanese	nucl1643	Japanese
+Korean	kore1280	Korean
+Arabic	stan1318	Standard Arabic
+Hindi	hind1269	Hindi
+Dutch	dutc1256	Dutch
+Greek	mode1248	Modern Greek
+Hebrew	hebr1245	Modern Hebrew
+Turkish	nucl1301	Turkish
+Polish	poli1260	Polish
+Swedish	swed1254	Swedish
+Vietnamese	viet1252	Vietnamese
+Thai	thai1261	Thai
+Swahili	swah1253	Swahili
+Ukrainian	ukra1253	Ukrainian
+Czech	czec1258	Czech
+Slovak	slov1269	Slovak
+Romanian	roma1327	Romanian
+Bulgarian	bulg1262	Bulgarian
+Serbian	serb1264	Serbian Standard
+Croatian	croa1245	Croatian Standard
+Slovenian	slov1268	Slovenian
+Macedonian	mace1250	Macedonian
+Belarusian	bela1254	Belarusian
+Lithuanian	lith1251	Lithuanian
+Latvian	latv1249	Latvian
+Estonian	esto1258	Estonian
+Finnish	finn1318	Finnish
+Hungarian	hung1274	Hungarian
+Norwegian	norw1258	Norwegian
+Danish	dani1285	Danish
+Icelandic	icel1247	Icelandic
+Catalan	stan1289	Catalan
+Galician	gali1258	Galician
+Basque	basq1248	Basque
+Welsh	wels1247	Welsh
+Irish	iris1253	Irish
+Scottish Gaelic	scot1245	Scottish Gaelic
+Albanian	tosk1239	Northern Tosk Albanian
+Maltese	malt1254	Maltese
+Yiddish	east2295	Eastern Yiddish
+Afrikaans	afri1274	Afrikaans
+Amharic	amha1245	Amharic
+Somali	soma1255	Somali
+Yoruba	yoru1245	Yoruba
+Igbo	nucl1417	Igbo
+Hausa	haus1257	Hausa
+Zulu	zulu1248	Zulu
+Persian	west2369	Western Farsi
+Pashto	nort2646	Northern Pashto
+Georgian	nucl1302	Georgian
+Armenian	nucl1235	Eastern Armenian
+Mongolian	halh1238	Halh Mongolian
+Urdu	urdu1245	Urdu
+Bengali	beng1280	Bengali
+Punjabi	panj1256	Eastern Panjabi
+Tamil	tami1289	Tamil
+Telugu	telu1262	Telugu
+Marathi	mara1378	Marathi
+Gujarati	guja1252	Gujarati
+Malayalam	mala1464	Malayalam
+Kannada	nucl1305	Kannada
+Nepali	nepa1254	Nepali
+Sinhala	sinh1246	Sinhala
+Burmese	nucl1310	Burmese
+Khmer	cent1989	Central Khmer
+Lao	laoo1244	Lao
+Tagalog	taga1270	Tagalog
+Indonesian	indo1316	Standard Indonesian
+Malay	stan1306	Standard Malay
+Javanese	java1254	Javanese
+Azerbaijani	nort2697	North Azerbaijani
+Kazakh	kaza1248	Kazakh
+Uzbek	nort2690	Northern Uzbek
+Kyrgyz	kirg1245	Kirghiz
+Turkmen	turk1304	Turkmen
+Tatar	tata1255	Tatar
+Bashkir	bash1264	Bashkir
+Chuvash	chuv1255	Chuvash
+Sakha	yaku1245	Sakha
+Uyghur	uigh1240	Uighur
+Chechen	chec1245	Chechen
+Ossetian	iron1242	Iron Ossetian
+Abkhaz	abkh1244	Abkhaz
+Tajik	taji1245	Tajik
+Erzya	erzy1239	Erzya
+Komi	komi1268	Komi-Zyrian
+Udmurt	udmu1245	Udmurt
+Meadow Mari	east2328	Eastern Mari
+Northern Sami	nort2671	North Saami
+Faroese	faro1244	Faroese
+West Frisian	west2354	Western Frisian
+Luxembourgish	luxe1241	Moselle Franconian
+Occitan	occi1239	Occitan
+Sardinian	logu1236	Logudorese Sardinian
+Asturian	astu1246	Asturian
+Aragonese	arag1245	Aragonese
+Breton	bret1244	Breton
+Romansh	roma1326	Romansh
+Kabyle	kaby1243	Kabyle
+Wolof	nucl1347	Wolof
+Twi	akan1250	Akan
+Bambara	bamb1269	Bambara
+Oromo	west2721	West Central Oromo
+Tigrinya	tigr1271	Tigrinya
+Luganda	gand1255	Ganda
+Kinyarwanda	kiny1244	Kinyarwanda
+Shona	shon1251	Shona
+Xhosa	xhos1239	Xhosa
+Cebuano	cebu1242	Cebuano
+Sundanese	sund1252	Sundanese
+Quechua	cusc1236	Cusco Quechua
+Southeastern English	sout3285	Southeastern English
+Irish English	iris1255	Irish English
+Scottish English	stan1293-scotland	
+Indian English	indi1255	Indian English
+Jamaican English	jama1265	Jamaican English
+Australian English	aust1314	Australian English
+Nigerian English	nige1260	Nigerian English
+Southern African English	sout3331	Southern African English
+Philippine English	phil1246	Philippine English
+Singlish	sing1272	Singlish
+New Zealand English	newz1240	New Zealand English
+Welsh English	wels1248	Welsh English
+Kenyan English	keny1281	Kenyan English
+Ghanaian English	ghan1247	Ghanaian English
+Hong Kong English	hong1245	Hong Kong English
+Malaysian English	mala1551	Malaysian English
+North American English	nort3314	North American English
