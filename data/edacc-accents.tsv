@@ -1,0 +1,28 @@
+# EdAcc accent label -> entry name in data/entries.tsv.
+#
+# EdAcc tags each speaker by self-described accent, which mixes two different
+# things: nativised English varieties, which are entries in this game, and the
+# speaker's first language, which is not. Only the nativised varieties are
+# mapped here. Everything else EdAcc offers is dropped by the builder, since
+# data/entries.tsv excludes learner accents on purpose: guessing where a
+# Spanish-accented English speaker is from is guessing their first language,
+# which the language entries already cover.
+#
+# Dropped on that rule, with their take counts: Vietnamese 36, Italian 36,
+# Spanish 30, Eastern European 30, Lithuanian 12, Egyptian 12, Chinese 12,
+# Romanian 6, Israeli 6, Indonesian 6, Catalan 6, Bulgarian 6, European 5,
+# Dutch 4, Japanese 1, and "Don't know" 12.
+#
+# Indonesian English (12 takes) is nativised but has no entry, so it is also
+# dropped. Add it to entries.tsv first if it should be playable.
+#
+# edacc_label<TAB>entry
+Mainstream US English	North American English
+Nigerian English	Nigerian English
+Southern British English	Southeastern English
+Kenyan English	Kenyan English
+Indian English	Indian English
+Jamaican English	Jamaican English
+Irish English	Irish English
+Scottish English	Scottish English
+Ghanain English	Ghanaian English

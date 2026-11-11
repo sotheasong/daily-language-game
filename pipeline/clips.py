@@ -502,6 +502,42 @@ def audit(takes, target_s=PLAN_VOICED_S, min_voiced_s=MIN_VOICED_S):
     return sorted(out, key=lambda r: -r["takes"])
 
 
+def map_labels(takes, mapping):
+    """Rename each take's label to its entry, dropping labels not in the map.
+
+    An empty map passes everything through, for corpora whose labels already
+    are entry names. Dropping is the point: a corpus label with no entry has
+    nowhere to be played, and passing it through quietly built clips for
+    varieties the design had excluded.
+    """
+    if not mapping:
+        return list(takes)
+    return [dict(t, label=mapping[t["label"]])
+            for t in takes if t["label"] in mapping]
+
+
+def read_label_map(path, from_col=0, to_col=1):
+    """Read a corpus-label-to-entry map out of two columns of a TSV.
+
+    Columns are taken by position because the two maps are laid out
+    differently: data/edacc-accents.tsv is written for this (label, entry),
+    while data/cv-locales.tsv is the pull list and has the entry first with
+    the locale third. Reading it in place beats keeping a second copy.
+    """
+    out = {}
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            cols = line.rstrip("\n").split("\t")
+            if max(from_col, to_col) >= len(cols):
+                continue
+            key, value = cols[from_col].strip(), cols[to_col].strip()
+            if key and value:
+                out[key] = value
+    return out
+
+
 def read_manifest(path, label_field):
     import csv
     with open(path, encoding="utf-8") as fh:
@@ -618,6 +654,13 @@ def main():
     ap.add_argument("--manifest", required=True,
                     help="TSV with file, speaker, text and a label column")
     ap.add_argument("--label", default="accent", help="manifest column to group by")
+    ap.add_argument("--label-map", metavar="TSV",
+                    help="map corpus labels to entry names, dropping unmapped "
+                         "ones (e.g. data/edacc-accents.tsv)")
+    ap.add_argument("--label-map-cols", default="0,1", metavar="FROM,TO",
+                    help="which columns of --label-map hold the corpus label "
+                         "and the entry name (default 0,1; use 2,0 for "
+                         "data/cv-locales.tsv)")
     ap.add_argument("--build", metavar="DIR",
                     help="assemble clips into DIR instead of only reporting")
     ap.add_argument("--per-label", type=int, default=None,
@@ -634,6 +677,18 @@ def main():
     if not takes:
         sys.stderr.write("no audio read\n")
         return 1
+
+    if args.label_map:
+        from_col, to_col = (int(c) for c in args.label_map_cols.split(","))
+        mapping = read_label_map(args.label_map, from_col, to_col)
+        before = len(takes)
+        takes = map_labels(takes, mapping)
+        sys.stderr.write(
+            f"{before - len(takes)} of {before} takes dropped, their label is "
+            f"not an entry in {args.label_map}\n")
+        if not takes:
+            sys.stderr.write("no takes left after mapping\n")
+            return 1
 
     duration = sum(t["duration"] for t in takes)
     voiced = sum(t["voiced_s"] for t in takes)

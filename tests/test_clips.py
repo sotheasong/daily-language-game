@@ -197,6 +197,73 @@ class ChoosingAmongAttempts(unittest.TestCase):
         self.assertIsNone(clips.pick_best([], 8.0))
 
 
+class MappingCorpusLabelsToEntries(unittest.TestCase):
+    """A corpus labels its audio its own way; the game needs entry names.
+
+    EdAcc tags by the speaker's self-described accent, which mixes nativised
+    varieties (Nigerian English, an entry) with first-language backgrounds
+    (Spanish, Italian, "Don't know"). data/entries.tsv excludes learner
+    accents on purpose, so an unmapped label is dropped, not passed through:
+    passing it through built clips labelled "Italian" that would have collided
+    with the Italian language entry.
+    """
+
+    MAP = {"Southern British English": "Southeastern English",
+           "Ghanain English": "Ghanaian English",
+           "Nigerian English": "Nigerian English"}
+
+    def test_a_label_is_renamed_to_its_entry(self):
+        # EdAcc's own spelling of Ghanaian is missing a letter.
+        takes = [{"label": "Ghanain English"}]
+        self.assertEqual(clips.map_labels(takes, self.MAP)[0]["label"],
+                         "Ghanaian English")
+
+    def test_an_unmapped_label_is_dropped(self):
+        takes = [{"label": "Spanish"}, {"label": "Nigerian English"}]
+        got = clips.map_labels(takes, self.MAP)
+        self.assertEqual([t["label"] for t in got], ["Nigerian English"])
+
+    def test_an_empty_map_passes_everything_through(self):
+        # Corpora whose labels are already entry names need no map.
+        takes = [{"label": "he"}, {"label": "el"}]
+        self.assertEqual(len(clips.map_labels(takes, {})), 2)
+
+
+class ReadingALabelMap(unittest.TestCase):
+    """Two label maps exist and they are not laid out the same way.
+
+    data/edacc-accents.tsv is written label-then-entry for this purpose.
+    data/cv-locales.tsv already existed as the pull list, entry first and the
+    locale third, so the reader takes the two columns it wants rather than
+    forcing a second copy of data that would drift from the first.
+    """
+
+    def _write(self, text):
+        import tempfile
+        fh = tempfile.NamedTemporaryFile("w", suffix=".tsv", delete=False,
+                                         encoding="utf-8")
+        fh.write(text)
+        fh.close()
+        self.addCleanup(__import__("os").remove, fh.name)
+        return fh.name
+
+    def test_comments_and_blank_lines_are_skipped(self):
+        path = self._write("# a note\n\nIrish English\tIrish English\n")
+        self.assertEqual(clips.read_label_map(path),
+                         {"Irish English": "Irish English"})
+
+    def test_the_two_columns_are_chosen_by_position(self):
+        # cv-locales.tsv: entry, tier, locale, then counts.
+        path = self._write("Hebrew\t1\the\tplenty\t60\t5.3\n")
+        self.assertEqual(clips.read_label_map(path, from_col=2, to_col=0),
+                         {"he": "Hebrew"})
+
+    def test_a_row_too_short_for_those_columns_is_skipped(self):
+        path = self._write("Hebrew\t1\the\nbroken\n")
+        self.assertEqual(clips.read_label_map(path, from_col=2, to_col=0),
+                         {"he": "Hebrew"})
+
+
 class Screening(unittest.TestCase):
     """Reject takes whose transcript makes them unusable, before anyone listens.
 
