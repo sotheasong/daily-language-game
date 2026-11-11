@@ -100,6 +100,54 @@ class WhatCannotShareASession(unittest.TestCase):
             entry("Japanese", "1"), entry("Finnish", "2"), forbidden=set()))
 
 
+class StraddleRoundsSpendTheLessScarceTier(unittest.TestCase):
+    """Rounds 2 and 4 draw from two tiers, so they choose which to deplete.
+
+    Round 1 is strictly tier 1 and there are only 27 tier 1 entries, so when
+    round 2 also takes tier 1 the two compete for the smallest pool and the
+    runway collapses. Measured 2026-11-10: with audio on every tier 1 entry,
+    a 21 day window gave 16 days of runway, where tier 1's size alone allows
+    27. Straddle rounds now try the tier with more left first, which keeps
+    the variety the ramp wants while spending the scarce tier last.
+    """
+
+    def test_round_two_prefers_tier_two_when_tier_one_is_scarce(self):
+        pool = ([entry("One0", "1")]
+                + [entry(f"Two{i}", "2") for i in range(6)]
+                + [entry(f"Three{i}", "3") for i in range(3)])
+        clips = {e["name"]: [f"{e['name']}-c"] for e in pool}
+        session = schedule.pick_session(pool, clips, seed=3)
+        self.assertIsNotNone(session)
+        # One0 is the only tier 1, and round 1 must have it.
+        self.assertEqual(session[0]["name"], "One0")
+        self.assertEqual(session[1]["tier"], "2")
+
+    def test_round_two_still_takes_tier_one_when_that_is_the_roomier_tier(self):
+        # Round 3 is strictly tier 2 and round 5 strictly tier 3, so a pool
+        # needs at least one of each on top of whatever the straddle rounds
+        # take. Here tier 2 is the scarce one, so round 2 leaves it alone.
+        pool = ([entry(f"One{i}", "1") for i in range(6)]
+                + [entry("Two0", "2")]
+                + [entry("Three0", "3"), entry("Three1", "3")])
+        clips = {e["name"]: [f"{e['name']}-c"] for e in pool}
+        session = schedule.pick_session(pool, clips, seed=3)
+        self.assertIsNotNone(session)
+        self.assertEqual(session[1]["tier"], "1")
+        # And round 3 got the one tier 2 that exists.
+        self.assertEqual(session[2]["name"], "Two0")
+
+    def test_preference_never_costs_a_session(self):
+        # Ordering is a preference, not a filter. On a pool with no slack the
+        # search must still find the one legal arrangement.
+        pool = ([entry("One0", "1")]
+                + [entry(f"Two{i}", "2") for i in range(3)]
+                + [entry(f"Three{i}", "3") for i in range(2)])
+        clips = {e["name"]: [f"{e['name']}-c"] for e in pool}
+        session = schedule.pick_session(pool, clips, seed=3)
+        self.assertIsNotNone(session)
+        self.assertEqual(len(session), 5)
+
+
 class WhatCannotComeBackYet(unittest.TestCase):
     """An entry and a clip each have to rest before being used again.
 

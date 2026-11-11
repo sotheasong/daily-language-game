@@ -106,11 +106,23 @@ def pick_session(entries, clips, forbidden=frozenset(), recent_entries=frozenset
     rng = random.Random(seed)
     pool = [e for e in entries if e["name"] not in recent_entries]
 
+    # How many entries each tier can still offer, counting only those with a
+    # clip free to use. Straddle rounds spend the roomier tier first so they
+    # stop competing with the rounds that have no choice.
+    room = {}
+    for tier in {e["tier"] for e in pool}:
+        room[tier] = sum(1 for e in pool if e["tier"] == tier
+                         and fresh_clip(e, clips, recent_clips, set()))
+
     by_round = []
     for index in range(rounds):
         band = TIER_BANDS[index]
         candidates = [e for e in pool if e["tier"] in band]
         rng.shuffle(candidates)
+        if len(band) > 1:
+            # A preference, not a filter. The search still backtracks into the
+            # scarce tier when the roomier one leads nowhere.
+            candidates.sort(key=lambda e: -room.get(e["tier"], 0))
         by_round.append(candidates)
 
     chosen, used_clips = [], set()
