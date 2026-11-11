@@ -170,24 +170,44 @@ def write_manifest(root, locale, speakers, per_speaker):
     return len(kept), path
 
 
+def classify_refusal(exc):
+    """What a failed download check actually means: ready, terms or unknown.
+
+    Only PermissionError means the terms are unaccepted, and only that case
+    is worth sending someone to a browser for. Everything else is a transient
+    or an unknown, and must not be reported as a terms problem.
+
+    Reporting the difference wrongly has cost real time twice. A hand-rolled
+    urllib POST drew a Cloudflare 403 code 1010 on browser signature and all
+    eight locales read as needing terms; routed through the SDK, a rate limit
+    read the same way for six more. Both would have sent someone to accept
+    terms that were already accepted, and hidden the real cause.
+    """
+    if exc is None:
+        return "ready"
+    if isinstance(exc, PermissionError):
+        return "terms"
+    return "unknown"
+
+
 def terms_accepted(dataset_id):
     """Ask whether this dataset can be downloaded, without downloading it.
 
-    Goes through the SDK's own request path rather than a hand-rolled one.
-    A plain urllib POST gets a Cloudflare 403 on browser signature, code 1010,
-    which reads like a refusal and is nothing of the kind. Asking costs one
-    request; finding out by downloading costs gigabytes.
+    Returns (state, detail) where state is ready, terms or unknown. Goes
+    through the SDK's own request path rather than a hand-rolled one, since a
+    plain urllib POST draws a Cloudflare block. Asking costs one request;
+    finding out by downloading costs gigabytes.
     """
     from datacollective import api_utils
     url = f"{api_utils._get_api_url()}/datasets/{dataset_id}/download"
     try:
         api_utils._send_api_request(method="POST", url=url,
                                     source_function="terms_accepted")
-        return True, ""
     except PermissionError as exc:
-        return False, str(exc).split(":")[-1].strip()[:70]
+        return "terms", str(exc).split(":")[-1].strip()[:70]
     except Exception as exc:
-        return False, f"{type(exc).__name__}: {exc}"[:90]
+        return "unknown", f"{type(exc).__name__}: {exc}"[:90]
+    return "ready", ""
 
 
 def download_with_backoff(dc, dataset_id, cache, pause, tries=5):
@@ -255,18 +275,29 @@ def main():
         if not os.environ.get("MDC_API_KEY"):
             raise SystemExit("MDC_API_KEY is not set and no .env was found")
         sys.stderr.write("\n  checking whether each dataset is unlocked:\n")
-        blocked = []
+        needs_terms, unknown = [], []
         for row, info in resolved:
-            ok, why = terms_accepted(info["id"])
+            state, why = terms_accepted(info["id"])
             sys.stderr.write(f"    {row['input_name']:<18}{row['locale']:<8}"
-                             f"{'ready' if ok else 'blocked':<9}{'' if ok else why}\n")
-            if not ok:
-                blocked.append((row["input_name"], row["locale"], info["url"]))
-        if blocked:
-            sys.stderr.write(f"\n  {len(blocked)} still need their terms accepted:\n")
-            for name, locale, url in blocked:
+                             f"{state:<9}{why}\n")
+            if state == "terms":
+                needs_terms.append((row["input_name"], row["locale"], info["url"]))
+            elif state == "unknown":
+                unknown.append((row["input_name"], row["locale"], why))
+        if needs_terms:
+            sys.stderr.write(
+                f"\n  {len(needs_terms)} need their terms accepted, once, in a\n"
+                f"  browser signed in to the same account:\n")
+            for name, locale, url in needs_terms:
                 sys.stderr.write(f"    {name:<18}{locale:<8}{url}\n")
-        return 1 if blocked else 0
+        if unknown:
+            sys.stderr.write(
+                f"\n  {len(unknown)} could not be checked. This is not a terms\n"
+                f"  problem and a browser will not fix it; the usual cause is\n"
+                f"  the rate limit, so try again later:\n")
+            for name, locale, why in unknown:
+                sys.stderr.write(f"    {name:<18}{locale:<8}{why}\n")
+        return 1 if needs_terms or unknown else 0
 
     if args.list or not args.pull:
         sys.stderr.write("  (--list only; pass --pull to download)\n")
