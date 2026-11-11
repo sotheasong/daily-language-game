@@ -184,23 +184,61 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
    metadata, and names each clip by a hash of its contents. Provenance goes to
    `clips.tsv`, which matters because EdAcc is CC BY-SA.
 
-   First real build: 63 clips, 59 inside the 8 to 12 second spec, and measuring
-   the finished files back gives a median 8.2 voiced seconds against a target
-   of 8.0.
+   **Clips exist.** 80 across 12 entries as of 2026-11-10: 52 from EdAcc over
+   9 accents, and 10 Hebrew, 10 Greek and 8 Turkish from Common Voice. One of
+   the 80 holds under 8 voiced seconds, a Southeastern English clip with no
+   longer take available from that speaker.
 
-   **Still needed:** Mozilla Data Collective access. EdAcc covers 9 of the 17
-   accent entries and none of the 119 languages.
+   Three things were wrong and are fixed, all found by pulling a locale that
+   was not Latin script:
 
-   **Clips exist.** 60 from EdAcc across 9 accents, 4 from Turkish Common
-   Voice, all 8 to 12 seconds with a 7.8 second voiced floor.
+   **The transcript screen only knew Latin letters.** It tokenised on
+   `[A-Za-z']+`, so a Hebrew sentence produced zero words and all 80 Hebrew
+   takes were binned as backchannels. Turkish had passed only because Turkish
+   is Latin script, and most of the 100 locales are not. Transcripts now
+   tokenise on any letter in any script. Khmer, Thai, Chinese and Japanese
+   write without spaces, so a sentence is one token and no token count clears
+   the floor; those are recognised by one long run of letters instead.
 
-   **MDC rate-limits downloads to roughly one locale per long window.** One
-   3 GB pull went through on 2026-11-09 and everything for the next hour was
-   refused, 18 retries, none succeeding. Pull one locale at a time, smallest
-   first, across days. Hebrew 151 MB, Korean 219, Vietnamese 485 are the cheap
-   ones; Spanish alone is 52 GB.
+   **`clips.tsv` recorded what the sources held, not what the clip holds.** It
+   summed each take's voiced seconds before trimming, so a 13.2 second take
+   cut to a 9 second budget was filed as 13.2. The undershoot tuned on
+   2026-11-09 was measured against that column, which is why raising the plan
+   target never closed it. Two honest numbers now: `planned_s`, the speech
+   inside the trimmed spans, and `voiced_s`, read back off the encoded file.
 
-   Terms accepted so far: tr nl sv-SE el hi vi he ko. Downloaded: tr.
+   **The publish step loses voiced seconds, by 0.34 to 1.78 per clip.**
+   loudnorm raises the gain on a quiet source, lifting the noise floor along
+   with the speech, and the detector's threshold is relative to that floor.
+   The loss tracks how noisy the source was, so no constant absorbs it. The
+   builder encodes, measures, and retries up to two seconds wider when the
+   file came up short. Hebrew went from 4 of 10 short to 0 of 10, with 4 clips
+   needing the wider budget.
+
+   **Clips are labelled by entry now.** The builder grouped by whatever string
+   the corpus used, which produced clips filed as `tr` and
+   `Mainstream US English`. EdAcc was worse: it tags by self-described accent
+   and mixes nativised varieties with first-language backgrounds, so an
+   unfiltered run built clips labelled `Italian`, `Spanish` and `Don't know`.
+   `data/edacc-accents.tsv` maps the 9 nativised varieties and names every
+   label it drops with its count and the reason. Common Voice reuses
+   `data/cv-locales.tsv` through `--label-map-cols`, since that file already
+   pairs locale with entry.
+
+   **Still needed:** more Common Voice locales. 12 of 136 entries have audio.
+
+   **MDC meters downloads by volume, somewhere near 1 to 3 GB a day.** Revised
+   2026-11-10. On 11-09 one 3 GB locale went through and everything for the
+   next hour was refused, 18 retries, none succeeding, which read as one
+   locale per window. On 11-10 Hebrew (151 MB) and Greek (810 MB) both landed
+   within six minutes of each other, so the limit is not a count of locales.
+   Pull smallest first and expect roughly a gigabyte a day. Korean 219 MB and
+   Vietnamese 485 are the next cheap ones; Spanish alone is 52 GB.
+
+   Terms accepted: tr nl sv-SE el hi vi he. **Korean is not accepted** despite
+   an earlier note saying it was; `--check` on 2026-11-10 reports it blocked,
+   and accepting needs a browser signed in to the same account.
+   Downloaded: tr he el.
 
 2. **The approval gate and review page**, so no session goes live unreviewed.
 3. **Name the game.** Open since the third design pass. It gates the domain.
