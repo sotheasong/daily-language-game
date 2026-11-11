@@ -142,6 +142,61 @@ class WavDecoding(unittest.TestCase):
         self.assertEqual(got[0], 2000)
 
 
+class VoicedWithinASpan(unittest.TestCase):
+    """How much speech a trimmed span actually holds.
+
+    build_clips recorded the sum of its sources' voiced seconds, which is the
+    figure before trimming. A 13.2 second take cut down to a 9 second budget
+    was filed as 13.2, so clips.tsv claimed more speech than the clip held and
+    every audit run off that column was measuring the wrong thing.
+    """
+
+    SEGMENTS = [(0.0, 2.0), (3.0, 5.0), (6.0, 10.0)]
+
+    def test_a_span_covering_everything_holds_every_segment(self):
+        self.assertAlmostEqual(
+            clips.voiced_within(self.SEGMENTS, 0.0, 10.0), 8.0)
+
+    def test_a_span_is_credited_only_for_the_speech_inside_it(self):
+        # Trimming to the first 5 seconds leaves two segments, not three.
+        self.assertAlmostEqual(
+            clips.voiced_within(self.SEGMENTS, 0.0, 5.0), 4.0)
+
+    def test_a_segment_straddling_the_cut_is_counted_in_part(self):
+        # The cut lands mid-segment at 8.0, so 2 of that segment's 4 seconds
+        # survive, on top of the 4 before it.
+        self.assertAlmostEqual(
+            clips.voiced_within(self.SEGMENTS, 0.0, 8.0), 6.0)
+
+    def test_silence_between_segments_is_not_speech(self):
+        self.assertAlmostEqual(
+            clips.voiced_within(self.SEGMENTS, 2.0, 3.0), 0.0)
+
+
+class ChoosingAmongAttempts(unittest.TestCase):
+    """Which attempt to keep when a clip has been built at several budgets.
+
+    The publish step loses voiced seconds, by 0.34 to 1.78 on the first Hebrew
+    batch, because loudnorm lifts the noise floor along with the speech and the
+    detector is relative to that floor. The loss is not predictable from the
+    source, so the builder plans, measures the encoded file, and retries wider
+    when it came up short. These are the rules for picking the keeper.
+    """
+
+    def test_the_first_attempt_that_clears_spec_wins(self):
+        # No reason to serve a 14 second clip when a 9 second one is in spec.
+        attempts = [{"voiced_s": 7.2}, {"voiced_s": 8.4}, {"voiced_s": 11.9}]
+        self.assertEqual(clips.pick_best(attempts, 8.0), attempts[1])
+
+    def test_nothing_in_spec_keeps_the_longest(self):
+        # Short is better than shorter, and the alternative is no clip at all.
+        attempts = [{"voiced_s": 6.1}, {"voiced_s": 7.4}, {"voiced_s": 7.0}]
+        self.assertEqual(clips.pick_best(attempts, 8.0), attempts[1])
+
+    def test_no_attempts_means_no_clip(self):
+        self.assertIsNone(clips.pick_best([], 8.0))
+
+
 class Screening(unittest.TestCase):
     """Reject takes whose transcript makes them unusable, before anyone listens.
 

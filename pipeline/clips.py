@@ -299,6 +299,30 @@ def clip_id(parts, length=16):
     return digest.hexdigest()[:length]
 
 
+# How much wider to plan when the encoded clip came up short. The publish loss
+# ran to 1.78s on the first Hebrew batch, so two extra seconds covers it.
+RETRY_MARGINS_S = (0.0, 1.0, 2.0)
+
+
+def pick_best(attempts, target_s=TARGET_VOICED_S):
+    """The first attempt that clears `target_s`, else the longest one."""
+    if not attempts:
+        return None
+    for attempt in attempts:
+        if attempt["voiced_s"] >= target_s:
+            return attempt
+    return max(attempts, key=lambda a: a["voiced_s"])
+
+
+def voiced_within(segments, start, end):
+    """Seconds of speech inside [start, end), counting partial segments.
+
+    This is what a clip holds after trimming, as opposed to what its sources
+    held before it. The two differ by however much the trim threw away.
+    """
+    return sum(max(0.0, min(e, end) - max(s, start)) for s, e in segments)
+
+
 def plan_splice(takes, speaker, target_s=PLAN_VOICED_S, min_voiced_s=MIN_VOICED_S):
     """Choose utterances from one speaker to reach about `target_s` voiced.
 
@@ -430,6 +454,19 @@ def splice(parts, out_path, rate=PUBLISH_RATE, lufs=PUBLISH_LUFS):
     return out_path
 
 
+def measure_published(path):
+    """Voiced seconds in a finished clip, read back off the encoded file.
+
+    Ground truth, and not the same as the plan. loudnorm raises the gain on a
+    quiet source, which lifts the noise floor along with the speech, so the
+    detector finds less voicing in the published clip than in the source. On
+    the first Hebrew batch that cost 0.4 to 1.8 seconds per clip, enough to
+    drop four of ten below spec while the plan said all ten cleared it.
+    """
+    samples, rate = decode(path)
+    return voiced_seconds(samples, rate)
+
+
 def audit(takes, target_s=PLAN_VOICED_S, min_voiced_s=MIN_VOICED_S):
     """Group takes by label and report how many finished clips each could make.
 
@@ -520,29 +557,54 @@ def build_clips(takes, out_dir, target_s=PLAN_VOICED_S, min_voiced_s=MIN_VOICED_
             for speaker in sorted(pool):
                 if per_label is not None and made >= per_label:
                     break
-                plan = plan_splice(pool[speaker], speaker, target_s, min_voiced_s)
-                if not plan:
+                # Plan, encode, measure the encoded file, and widen if it came
+                # up short. The publish loss varies with how noisy the source
+                # was, so it cannot be absorbed into one constant.
+                attempts, seen = [], set()
+                for margin in RETRY_MARGINS_S:
+                    plan = plan_splice(pool[speaker], speaker,
+                                       target_s + margin, min_voiced_s)
+                    if not plan:
+                        continue
+                    parts, budget, planned = [], target_s + margin, 0.0
+                    for take in plan:
+                        span = trim_to_voiced(take["segments"], budget,
+                                              duration=take["duration"])
+                        if span:
+                            parts.append((take["path"], span[0], span[1]))
+                            planned += voiced_within(
+                                take["segments"], span[0], span[1])
+                            budget -= take["voiced_s"]
+                    if not parts:
+                        continue
+                    name = clip_id(parts)
+                    if name in seen:
+                        # A wider budget picked the same takes and the same
+                        # spans, so re-encoding would give the same file.
+                        continue
+                    seen.add(name)
+                    path = os.path.join(out_dir, f"{name}.opus")
+                    splice(parts, path)
+                    attempts.append({
+                        "clip": name, "label": label, "speaker": speaker,
+                        "parts": len(parts),
+                        "voiced_s": round(measure_published(path), 2),
+                        "planned_s": round(planned, 2),
+                        "sources": " ".join(t["id"] for t in plan),
+                        "_used": {t["id"] for t in plan},
+                    })
+                    if attempts[-1]["voiced_s"] >= TARGET_VOICED_S:
+                        break
+                keeper = pick_best(attempts)
+                if keeper is None:
                     continue
-                parts, budget = [], target_s
-                for take in plan:
-                    span = trim_to_voiced(take["segments"], budget,
-                                          duration=take["duration"])
-                    if span:
-                        parts.append((take["path"], span[0], span[1]))
-                        budget -= take["voiced_s"]
-                if not parts:
-                    continue
-                name = clip_id(parts)
-                splice(parts, os.path.join(out_dir, f"{name}.opus"))
-                built.append({
-                    "clip": name, "label": label, "speaker": speaker,
-                    "parts": len(parts),
-                    "voiced_s": round(sum(t["voiced_s"] for t in plan), 2),
-                    "sources": " ".join(t["id"] for t in plan),
-                })
+                for attempt in attempts:
+                    if attempt is not keeper:
+                        os.remove(os.path.join(out_dir, f"{attempt['clip']}.opus"))
+                used = keeper.pop("_used")
+                built.append(keeper)
                 made += 1
                 progressed = True
-                used = {t["id"] for t in plan}
                 pool[speaker] = [t for t in pool[speaker] if t["id"] not in used]
             if not progressed:
                 break
@@ -598,14 +660,30 @@ def main():
         built = build_clips(takes, args.build, args.target, args.min_voiced,
                             args.per_label)
         record = os.path.join(args.build, "clips.tsv")
+        fields = ["clip", "label", "speaker", "parts",
+                  "voiced_s", "planned_s", "sources"]
+        # Merge rather than overwrite. One run covers one corpus, and rewriting
+        # the file left the clips from every earlier run sitting in the
+        # directory with no provenance. Clip ids are content hashes, so a
+        # rebuilt clip replaces its own row and nothing else.
+        rows = {}
+        if os.path.exists(record):
+            with open(record, encoding="utf-8") as fh:
+                for row in csv.DictReader(fh, delimiter="\t"):
+                    rows[row["clip"]] = row
+        for row in built:
+            rows[row["clip"]] = row
         with open(record, "w", newline="", encoding="utf-8") as fh:
-            writer = csv.DictWriter(
-                fh, fieldnames=["clip", "label", "speaker", "parts", "voiced_s", "sources"],
-                delimiter="\t", lineterminator="\n")
+            writer = csv.DictWriter(fh, fieldnames=fields, delimiter="\t",
+                                    lineterminator="\n", extrasaction="ignore")
             writer.writeheader()
-            writer.writerows(built)
+            writer.writerows(rows[k] for k in sorted(rows))
+        short = [r for r in built if float(r["voiced_s"]) < TARGET_VOICED_S]
         sys.stderr.write(f"\nbuilt {len(built)} clips into {args.build}\n")
-        sys.stderr.write(f"provenance in {record}\n")
+        sys.stderr.write(
+            f"{len(short)} of {len(built)} hold under {TARGET_VOICED_S}s voiced "
+            f"once encoded\n")
+        sys.stderr.write(f"provenance in {record} ({len(rows)} clips)\n")
     return 0
 
 
