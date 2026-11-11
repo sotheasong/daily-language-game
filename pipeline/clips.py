@@ -125,8 +125,18 @@ NON_SPEECH = ("IGNORE_TIME_SEGMENT_IN_SCORING",)
 # A real language sample needs some lexical variety. "MM HMM MM HMM" clears a
 # duration floor and teaches a player nothing.
 MIN_DISTINCT_WORDS = 4
+# Khmer, Thai, Chinese and Japanese write without spaces, so a whole sentence
+# arrives as one token and no amount of token counting will clear the floor.
+# Those scripts are recognised by a single long unbroken run of letters, which
+# a backchannel never produces: "MM HMM MM" is five letters at its longest.
+MIN_RUN_LETTERS = 12
 
+# Natural Earth writes its place names in Latin script, so giveaways are
+# extracted with a Latin pattern.
 _WORD = re.compile(r"[A-Za-z']+")
+# Transcripts are not. Any letter in any script counts, with contractions kept
+# whole so a giveaway cannot hide behind an apostrophe.
+_TOKEN = re.compile(r"[^\W\d_]+(?:'[^\W\d_]+)*")
 
 
 def screen(text, giveaways=()):
@@ -147,8 +157,9 @@ def screen(text, giveaways=()):
             # Name the tag, so a curator can find it in the transcript.
             return f"{tag.lstrip('<').lower()}: {reason}"
 
-    words = [w.lower() for w in _WORD.findall(raw)]
-    if len(set(words)) < MIN_DISTINCT_WORDS:
+    words = [w.lower() for w in _TOKEN.findall(raw)]
+    if (len(set(words)) < MIN_DISTINCT_WORDS
+            and max((len(w) for w in words), default=0) < MIN_RUN_LETTERS):
         return "a backchannel, not a language sample"
 
     hits = sorted(set(words) & {g.lower() for g in giveaways})

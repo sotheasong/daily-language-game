@@ -167,6 +167,23 @@ class Screening(unittest.TestCase):
         # "MM HMM" clears a duration floor and teaches a player nothing.
         self.assertIsNotNone(clips.screen("MM HMM MM HMM MM"))
 
+    def test_a_non_latin_script_is_not_a_backchannel(self):
+        # The screen ran on [A-Za-z]+, so a Hebrew sentence tokenised to zero
+        # words and every Hebrew take was binned as a backchannel. The corpus
+        # is 100 locales and most of them are not Latin script.
+        self.assertIsNone(clips.screen(
+            "\u05d5\u05d0\u05e0\u05d9 \u05dc\u05d0 \u05d1\u05d8\u05d5\u05d7 \u05e9\u05dc\u05d2\u05d1\u05d9 \u05d4\u05e4\u05e8\u05dc\u05de\u05e0\u05d8 \u05d4\u05d9\u05e4\u05e0\u05d9 \u05d6\u05d4 \u05e1\u05d8\u05d8\u05d5\u05d8\u05d5\u05e8\u05d9"))
+
+    def test_an_unspaced_script_is_judged_on_length(self):
+        # Khmer, Thai, Chinese and Japanese put no spaces between words, so
+        # token counting cannot work. A whole sentence is one token.
+        self.assertIsNone(clips.screen(
+            "\u1781\u17d2\u1789\u17bb\u17c6\u1798\u17b7\u1793\u178a\u17b9\u1784\u1790\u17b6\u178f\u17be\u179c\u17b6\u1798\u17b6\u1793\u1793\u17d0\u1799\u17a2\u17d2\u179c\u17b8"))
+
+    def test_a_short_non_latin_utterance_is_still_rejected(self):
+        # The length floor must not wave through a two-character backchannel.
+        self.assertIsNotNone(clips.screen("\u5bf9\u5bf9\u5bf9"))
+
     def test_ordinary_conversation_is_kept(self):
         self.assertIsNone(clips.screen(
             "YEAH THE WEATHER'S ACTUALLY QUITE NICE I FEEL LIKE WE HAVEN'T HAD SUN"))
