@@ -22,6 +22,7 @@ straight to it.
 | `sothea_mac` | integration. The pool, footprints, weights, scoring, the reviewer. |
 | `clip-pipeline` | voiced seconds, splice planning, the corpus fetches and audit |
 | `schedule-generator` | the draft session generator, branched off `clip-pipeline` |
+| `approval-gate` | the gate and the review page, branched off `schedule-generator` |
 | `footprint-refinements` | parked map work, see `REFINEMENTS.md` |
 
 Start one with `git switch -c <feature>` off `sothea_mac`. Merge back when the
@@ -85,7 +86,13 @@ python3 tools/preview.py Khmer Spanish -o /tmp/check.png   # render footprints
 python3 tools/check_countries.py                           # footprint vs country list
 python3 tools/tune_scoring.py --sweep                      # score worked pins
 python3 tools/export_reviewer.py -o <dir>                  # data for the reviewer
+python3 tools/review.py                                    # the approval gate
 ```
+
+Pillow was not actually installed anywhere as of 2026-11-10, despite this
+heading, so `pip install Pillow` into `.venv` is step one on a fresh clone.
+`tools/review.py` degrades to listening without it and names the failed
+import rather than only saying maps are off.
 
 Interactive reviewer for all 136: https://claude.ai/artifact/LfMjxMMtC42JmAvjV6PuQm
 
@@ -294,8 +301,41 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
    quota, and takes the generator from 0 days to 2. Terms are not yet accepted
    on any of them.
 
-3. **The approval gate and review page**, so no session goes live unreviewed.
-4. **Name the game.** Open since the third design pass. It gates the domain.
+3. **The approval gate and review page, done 2026-11-10**, on branch
+   `approval-gate`.
+
+   ```bash
+   python3 tools/review.py                      # listen, then approve
+   python3 -m pipeline.approvals --strict       # what a build should read
+   ```
+
+   `pipeline/approvals.py` is the gate. Approval is a signature over content,
+   not a flag on a date: an approved day stores a hash of what the reviewer
+   saw and `effective_status()` recomputes it on every read. A swapped clip, a
+   reordered session, a hand-edited file or a day predating the hash all
+   revert to draft. Verified against the live server: with two days approved,
+   editing one clip in `schedule.json` drops the runway from 2 to 0 while the
+   file still reads `status: approved`, and `--strict` exits 1.
+
+   Rejections key on the clip hash, not the date, because the clip is what was
+   wrong; keyed by date the generator re-offers it tomorrow. The generator
+   filters them. A blank reason is refused, since the reasons are the record
+   of what a bad clip looks like.
+
+   `tools/review.py` is the page, on `http.server` plus the Pillow rendering
+   `tools/preview.py` already does. Audio first, answer and density map on
+   reveal, approve or reject per day, reject a clip for good per round. It is
+   a curator's tool and deliberately not the player's front end, which is a
+   separate static site.
+
+   **Not built: the reserved fallback.** `runway_state()` returns `dry` and
+   nothing serves anything yet, because there is no endpoint. The handful of
+   pre-approved evergreen sessions it needs can only be chosen once enough
+   entries have audio.
+
+4. **An endpoint and a front end.** Nothing serves a day yet. Scoring exists
+   as a reference implementation in `pipeline/scoring.py`.
+5. **Name the game.** Open since the third design pass. It gates the domain.
 
 Parked on `footprint-refinements`: the map work. Outlines, borders and the
 density plot are accurate enough to build on, and the remaining items are in
