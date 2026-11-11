@@ -20,7 +20,8 @@ straight to it.
 | Branch | Holds |
 |---|---|
 | `sothea_mac` | integration. The pool, footprints, weights, scoring, the reviewer. |
-| `clip-pipeline` | voiced seconds, splice planning, the EdAcc fetch and audit |
+| `clip-pipeline` | voiced seconds, splice planning, the corpus fetches and audit |
+| `schedule-generator` | the draft session generator, branched off `clip-pipeline` |
 | `footprint-refinements` | parked map work, see `REFINEMENTS.md` |
 
 Start one with `git switch -c <feature>` off `sothea_mac`. Merge back when the
@@ -235,13 +236,63 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
    Pull smallest first and expect roughly a gigabyte a day. Korean 219 MB and
    Vietnamese 485 are the next cheap ones; Spanish alone is 52 GB.
 
-   Terms accepted: tr nl sv-SE el hi vi he. **Korean is not accepted** despite
-   an earlier note saying it was; `--check` on 2026-11-10 reports it blocked,
-   and accepting needs a browser signed in to the same account.
-   Downloaded: tr he el.
+   Terms accepted: tr nl sv-SE el hi vi he ko. Downloaded: tr he el. Korean
+   was accepted on 2026-11-10 but its download had not landed by end of day.
 
-2. **The approval gate and review page**, so no session goes live unreviewed.
-3. **Name the game.** Open since the third design pass. It gates the domain.
+   **`--check` used to report every refusal as a terms problem.** It returned
+   a boolean, so anything short of success was printed under "still need their
+   terms accepted", when only `PermissionError` means that. A rate limit on
+   six small locales was reported as six datasets needing terms. This was the
+   second time the same conflation cost time; the first was a Cloudflare 403,
+   code 1010, from a hand-rolled request. Three states now, ready, terms and
+   unknown, with the classification tested on all three error shapes.
+
+2. **The schedule generator, done 2026-11-10**, on branch `schedule-generator`.
+
+   ```
+   python3 -m pipeline.schedule --days 30 --start 2026-12-01 --dry-run
+   ```
+
+   Enforces the ramp from `game-design.md`, the 110 forbidden pairs in
+   `data/overlaps.tsv`, and a 21 day rest on entries and clips alike, counted
+   across the whole run and not just against history. Accents carry their own
+   rule, since theirs is not a geographic conflict: Irish and Scottish English
+   pins sit 400 km apart and `overlaps.tsv` records nothing between them, but
+   two English varieties in one session read as the same round twice. Every
+   day comes out a draft with a hash over its content, for the gate to sign.
+
+   Filling is backtracking rather than greedy, so a reported failure proves no
+   legal session existed.
+
+   **It proposes zero days today, correctly.** Ten of the 12 entries with
+   audio are accents and a session holds one, so rounds 3, 4 and 5 have
+   nothing else to offer. The three languages that do have audio, Greek,
+   Hebrew and Turkish, are all tier 1. `why_stuck()` says this in a sentence,
+   because the per-round counts on their own read as a near miss.
+
+   **Runway is set by how many entries have audio, not by the generator.**
+   Measured 2026-11-10 by giving synthetic audio to N languages per tier:
+
+   | Languages with audio, per tier | Days of runway |
+   |---|---|
+   | 8 | 6 |
+   | 12 | 9 |
+   | 16 | 11 |
+   | 21 (every tier 1 language) | 14 |
+   | all 119 | 120+ |
+
+   The window is the other half of that. With every language carrying audio a
+   21 day window sustains 120 days, while 27 collapses to 25, because round 1
+   then needs more tier 1 entries than exist. 21 is deliberate, not a default.
+
+   **What unblocks it: small tier 2 and tier 3 locales.** Common Voice has
+   several that are tiny. Lao 9 MB, Icelandic 16, Khmer 21 (tier 2); Ossetian
+   31, Sardinian 78, Turkmen 157 (tier 3). All six is 312 MB, inside one day's
+   quota, and takes the generator from 0 days to 2. Terms are not yet accepted
+   on any of them.
+
+3. **The approval gate and review page**, so no session goes live unreviewed.
+4. **Name the game.** Open since the third design pass. It gates the domain.
 
 Parked on `footprint-refinements`: the map work. Outlines, borders and the
 density plot are accurate enough to build on, and the remaining items are in
