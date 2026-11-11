@@ -236,8 +236,11 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
    Pull smallest first and expect roughly a gigabyte a day. Korean 219 MB and
    Vietnamese 485 are the next cheap ones; Spanish alone is 52 GB.
 
-   Terms accepted: tr nl sv-SE el hi vi he ko. Downloaded: tr he el. Korean
-   was accepted on 2026-11-10 but its download had not landed by end of day.
+   Terms accepted: tr nl sv-SE el hi vi he ko. Downloaded: tr he el. Korean's
+   terms were accepted on 2026-11-10 and its download still failed, through
+   four backoffs totalling 15 minutes, with RateLimitError. Accepting terms
+   and having quota are separate things, and the backoff cannot bridge the
+   second: 954 MB landed that day before everything after it was refused.
 
    **`--check` used to report every refusal as a terms problem.** It returned
    a boolean, so anything short of success was printed under "still need their
