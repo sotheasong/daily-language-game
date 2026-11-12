@@ -23,6 +23,7 @@ straight to it.
 | `clip-pipeline` | voiced seconds, splice planning, the corpus fetches and audit |
 | `schedule-generator` | the draft session generator, branched off `clip-pipeline` |
 | `approval-gate` | the gate and the review page, branched off `schedule-generator` |
+| `entry-validator` | the pool validator and clip licensing, off `approval-gate` |
 | `footprint-refinements` | parked map work, see `REFINEMENTS.md` |
 
 Start one with `git switch -c <feature>` off `sothea_mac`. Merge back when the
@@ -243,11 +244,17 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
    Pull smallest first and expect roughly a gigabyte a day. Korean 219 MB and
    Vietnamese 485 are the next cheap ones; Spanish alone is 52 GB.
 
-   Terms accepted: tr nl sv-SE el hi vi he ko. Downloaded: tr he el. Korean's
-   terms were accepted on 2026-11-10 and its download still failed, through
-   four backoffs totalling 15 minutes, with RateLimitError. Accepting terms
-   and having quota are separate things, and the backoff cannot bridge the
-   second: 954 MB landed that day before everything after it was refused.
+   Terms accepted: tr nl sv-SE el hi vi he ko. Downloaded: tr he el hi vi ko.
+   1.28 GB landed on 2026-11-11 with no refusals, against 954 MB on 11-10 and
+   3 GB on 11-09, so the daily allowance is somewhere above a gigabyte and
+   the three days give no sharper figure than that.
+
+   **Every locale whose terms are accepted is tier 1.** Pulling more of them
+   cannot unblock rounds 3, 4 and 5, which need a tier 2 or tier 3 language.
+   The six small ones that would (Lao 9 MB, Icelandic 16, Khmer 21, Ossetian
+   31, Sardinian 78, Turkmen 157) still need their terms accepted in a
+   browser, and `--check` on 2026-11-11 confirms it is genuinely the terms
+   and not the rate limit.
 
    **`--check` used to report every refusal as a terms problem.** It returned
    a boolean, so anything short of success was printed under "still need their
@@ -333,9 +340,38 @@ is capped. Kingston and Montego Bay score the same for Jamaican English.
    pre-approved evergreen sessions it needs can only be chosen once enough
    entries have audio.
 
-4. **An endpoint and a front end.** Nothing serves a day yet. Scoring exists
+4. **The validator, done 2026-11-11**, on branch `entry-validator`.
+
+   ```bash
+   python3 -m pipeline.validate --strict
+   ```
+
+   All six rules from `tech-stack.md`: required fields, clip licence and
+   length, region weights summing to 1, a parseable geometry, clips per tier
+   (4 for tier 1, 2 otherwise, from `audio-sourcing.md`), and Glottocode
+   resolution. Every rule runs against every entry and all problems report at
+   once, because the failure mode is a silently missing field that breaks one
+   round two months later, not a crash.
+
+   Entries with no audio are counted apart. 121 of 136 have none, and folding
+   that in buries every other finding. An entry with even one clip is in play
+   and held to the full requirement.
+
+   **Four real problems today, no false ones.** Irish and Scottish English at
+   2 of the 4 clips tier 1 needs, Ghanaian English at 1 of 2, and one
+   Southeastern English clip at 7.8s against the 8.0s spec. All three clip
+   shortfalls are EdAcc running out of takes for those accents, not a bug.
+   Fields, resolution, shares and geometry are clean across all 136 entries.
+
+   **Clips now record their licence.** EdAcc is CC BY-SA 4.0 and must be
+   attributed, Common Voice is CC0 and need not be, and `clips.tsv` recorded
+   neither while STATUS.md claimed provenance mattered for exactly that
+   reason. `--licence` and `--attribution` are now required with `--build`,
+   checked before any decoding. 109 clips: 52 CC BY-SA, 57 CC0.
+
+5. **An endpoint and a front end.** Nothing serves a day yet. Scoring exists
    as a reference implementation in `pipeline/scoring.py`.
-5. **Name the game.** Open since the third design pass. It gates the domain.
+6. **Name the game.** Open since the third design pass. It gates the domain.
 
 Parked on `footprint-refinements`: the map work. Outlines, borders and the
 density plot are accurate enough to build on, and the remaining items are in
