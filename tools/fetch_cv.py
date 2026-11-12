@@ -104,6 +104,14 @@ def describe(item):
     }
 
 
+# Vietnamese 27.0 has a field in validated.tsv larger than csv's 128 KB
+# default, which raised _csv.Error and aborted the whole run. Raised rather
+# than skipped, because the rows after it are fine. A row count is printed so
+# that a genuinely malformed file, where a missing tab swallows the rest, is
+# visible rather than silently yielding a handful of utterances.
+csv.field_size_limit(16 * 1024 * 1024)
+
+
 def write_manifest(root, locale, speakers, per_speaker):
     """Turn an extracted Common Voice locale into the manifest clips.py reads.
 
@@ -334,12 +342,21 @@ def main():
             sys.stderr.write(f"  {locale}: {type(exc).__name__}\n")
             continue
 
-        extracted = os.path.join(args.cache, "extracted", locale)
-        if not os.path.isdir(extracted):
-            os.makedirs(extracted, exist_ok=True)
-            with tarfile.open(archive) as tar:
-                tar.extractall(extracted, filter="data")
-        kept, where = write_manifest(extracted, locale, args.speakers, args.per_speaker)
+        # Extraction and parsing were outside the try, so a csv error on one
+        # locale took the rest of the run down with it, including locales
+        # whose archives had already been paid for in quota.
+        try:
+            extracted = os.path.join(args.cache, "extracted", locale)
+            if not os.path.isdir(extracted):
+                os.makedirs(extracted, exist_ok=True)
+                with tarfile.open(archive) as tar:
+                    tar.extractall(extracted, filter="data")
+            kept, where = write_manifest(extracted, locale, args.speakers,
+                                         args.per_speaker)
+        except Exception as exc:
+            failed.append((locale, f"{type(exc).__name__}: {exc}"))
+            sys.stderr.write(f"  {locale}: {type(exc).__name__}: {exc}\n")
+            continue
         sys.stderr.write(f"  {locale}: {kept} utterances -> {where}\n")
 
     if needs_terms:
