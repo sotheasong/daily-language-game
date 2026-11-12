@@ -454,6 +454,24 @@ def splice(parts, out_path, rate=PUBLISH_RATE, lufs=PUBLISH_LUFS):
     return out_path
 
 
+def stamp_provenance(rows, licence, attribution):
+    """Put the corpus licence and attribution on every clip row.
+
+    The pool mixes corpora with different obligations: EdAcc is CC BY-SA 4.0
+    and must be attributed, Common Voice is CC0 and need not be. Nothing
+    downstream could tell them apart while clips.tsv recorded neither.
+
+    A blank licence raises rather than writing an empty column, because that
+    is exactly how an attribution obligation goes missing.
+    """
+    if not licence or not licence.strip():
+        raise ValueError(
+            "a clip build needs --licence. One build is one corpus, and a "
+            "clip with no recorded licence cannot be published safely.")
+    return [dict(row, licence=licence.strip(),
+                 attribution=(attribution or "").strip()) for row in rows]
+
+
 def measure_published(path):
     """Voiced seconds in a finished clip, read back off the encoded file.
 
@@ -668,9 +686,24 @@ def main():
     ap.add_argument("--min-voiced", type=float, default=MIN_VOICED_S)
     ap.add_argument("--target", type=float, default=PLAN_VOICED_S,
                     help="voiced seconds to plan for; a little above what a clip must hold")
+    ap.add_argument("--licence", default=None,
+                    help="the corpus licence, recorded on every clip "
+                         "(e.g. 'CC BY-SA 4.0'). Required with --build.")
+    ap.add_argument("--attribution", default="",
+                    help="who to credit, for licences that require it")
     ap.add_argument("--no-screen", action="store_true",
                     help="skip the transcript screen")
     args = ap.parse_args()
+
+    # Checked before any decoding, because finding out after the splices have
+    # run wastes the whole build.
+    if args.build and not (args.licence or "").strip():
+        sys.stderr.write(
+            "--build needs --licence, recorded on every clip. One build is one\n"
+            "corpus, and the pool mixes licences with different obligations:\n"
+            "    EdAcc        --licence 'CC BY-SA 4.0' --attribution '...'\n"
+            "    Common Voice --licence 'CC0 1.0'\n")
+        return 2
 
     giveaways = () if args.no_screen else load_giveaways()
     takes = survey(args.root, args.manifest, args.label, giveaways)
@@ -715,8 +748,9 @@ def main():
         built = build_clips(takes, args.build, args.target, args.min_voiced,
                             args.per_label)
         record = os.path.join(args.build, "clips.tsv")
-        fields = ["clip", "label", "speaker", "parts",
-                  "voiced_s", "planned_s", "sources"]
+        built = stamp_provenance(built, args.licence, args.attribution)
+        fields = ["clip", "label", "speaker", "parts", "voiced_s", "planned_s",
+                  "licence", "attribution", "sources"]
         # Merge rather than overwrite. One run covers one corpus, and rewriting
         # the file left the clips from every earlier run sitting in the
         # directory with no provenance. Clip ids are content hashes, so a

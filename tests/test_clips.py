@@ -264,6 +264,37 @@ class ReadingALabelMap(unittest.TestCase):
                          {"he": "Hebrew"})
 
 
+class RecordingWhereAClipCameFrom(unittest.TestCase):
+    """Every clip carries its licence, because the pool mixes corpora.
+
+    EdAcc is CC BY-SA 4.0 and requires attribution; Common Voice is CC0 and
+    does not. clips.tsv recorded neither, so nothing downstream could tell
+    which clips carry an obligation. One build is one corpus, so the licence
+    is a flag rather than a column the fetchers have to learn.
+    """
+
+    def test_a_licence_is_carried_onto_every_row(self):
+        rows = clips.stamp_provenance(
+            [{"clip": "a"}, {"clip": "b"}], "CC BY-SA 4.0", "https://edacc")
+        self.assertEqual([r["licence"] for r in rows],
+                         ["CC BY-SA 4.0", "CC BY-SA 4.0"])
+
+    def test_the_attribution_is_carried_too(self):
+        rows = clips.stamp_provenance([{"clip": "a"}], "CC0 1.0", "https://cv")
+        self.assertEqual(rows[0]["attribution"], "https://cv")
+
+    def test_a_blank_licence_is_refused(self):
+        # Silently writing an empty licence is how an attribution obligation
+        # gets lost. The builder should stop instead.
+        with self.assertRaises(ValueError):
+            clips.stamp_provenance([{"clip": "a"}], "  ", "https://x")
+
+    def test_rows_are_not_mutated_in_place(self):
+        given = [{"clip": "a"}]
+        clips.stamp_provenance(given, "CC0 1.0", "https://cv")
+        self.assertNotIn("licence", given[0])
+
+
 class Screening(unittest.TestCase):
     """Reject takes whose transcript makes them unusable, before anyone listens.
 
